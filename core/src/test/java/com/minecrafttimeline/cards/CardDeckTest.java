@@ -21,7 +21,7 @@ class CardDeckTest {
     void shuffleUsesFisherYatesOrder() {
         List<Card> cards = buildCards(5);
         CardDeck deck = new CardDeck(cards);
-        List<Integer> sequence = List.of(0, 0, 1, 3);
+        List<Integer> sequence = List.of(0, 0, 1, 1);
         DeterministicRandom random = new DeterministicRandom(sequence);
 
         List<Card> expected = new ArrayList<>(deck.viewCards());
