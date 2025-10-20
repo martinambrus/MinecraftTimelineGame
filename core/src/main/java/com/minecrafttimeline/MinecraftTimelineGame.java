@@ -68,8 +68,5 @@ public class MinecraftTimelineGame extends Game {
     public void dispose() {
         Logger.info("Disposing MinecraftTimelineGame.");
         super.dispose();
-        if (getScreen() != null) {
-            getScreen().dispose();
-        }
     }
 }
