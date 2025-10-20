@@ -3,6 +3,7 @@ eclipse.project.name = appName + '-core'
 
 dependencies {
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
+  implementation "com.fasterxml.jackson.core:jackson-databind:2.17.0"
 
   testImplementation "org.junit.jupiter:junit-jupiter:${rootProject.ext.junitVersion}"
   testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoVersion}"

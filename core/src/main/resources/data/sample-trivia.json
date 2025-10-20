@@ -1,0 +1,66 @@
+[
+  {
+    "id": "alpha-launch",
+    "title": "Minecraft Alpha Release",
+    "date": "2010-06-28",
+    "trivia": "Minecraft transitions from Infdev to Alpha, introducing biomes and survival multiplayer.",
+    "imageAssetPath": "images/alpha.png",
+    "version": "Alpha 1.0.0"
+  },
+  {
+    "id": "beta-launch",
+    "title": "Minecraft Beta Launch",
+    "date": "2010-12-20",
+    "trivia": "Beta release brings server-side inventory, achievements, and more stable updates.",
+    "imageAssetPath": "images/beta.png",
+    "version": "Beta 1.0"
+  },
+  {
+    "id": "release-1-0",
+    "title": "Minecraft 1.0 Official Release",
+    "date": "2011-11-18",
+    "trivia": "The End dimension debuts as Minecraft leaves beta during Minecon 2011.",
+    "imageAssetPath": "images/release1_0.png",
+    "version": "1.0.0"
+  },
+  {
+    "id": "redstone-update",
+    "title": "Redstone Update",
+    "date": "2013-03-13",
+    "trivia": "Minecraft 1.5 revolutionizes redstone with comparators, hoppers, and more automation tools.",
+    "imageAssetPath": "images/redstone.png",
+    "version": "1.5"
+  },
+  {
+    "id": "village-pillager",
+    "title": "Village & Pillage Update",
+    "date": "2019-04-23",
+    "trivia": "Villagers gain new professions, raids arrive, and bamboo grows in the overworld.",
+    "imageAssetPath": "images/village_pillage.png",
+    "version": "1.14"
+  },
+  {
+    "id": "nether-update",
+    "title": "Nether Update",
+    "date": "2020-06-23",
+    "trivia": "The Nether gains biomes like the Crimson Forest and resources like ancient debris.",
+    "imageAssetPath": "images/nether_update.png",
+    "version": "1.16"
+  },
+  {
+    "id": "caves-cliffs-part1",
+    "title": "Caves & Cliffs Part I",
+    "date": "2021-06-08",
+    "trivia": "Axolotls, glow squids, and copper breathe life into the overworld.",
+    "imageAssetPath": "images/caves_cliffs1.png",
+    "version": "1.17"
+  },
+  {
+    "id": "wild-update",
+    "title": "The Wild Update",
+    "date": "2022-06-07",
+    "trivia": "Mangrove swamps, the Warden, and ancient cities change exploration forever.",
+    "imageAssetPath": "images/wild_update.png",
+    "version": "1.19"
+  }
+]
