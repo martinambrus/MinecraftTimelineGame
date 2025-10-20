@@ -12,6 +12,12 @@ buildscript {
   }
 }
 
+ext {
+  junitVersion = '5.10.2'
+  mockitoVersion = '5.13.0'
+  assertjVersion = '3.26.3'
+}
+
 allprojects {
   apply plugin: 'eclipse'
   apply plugin: 'idea'
@@ -68,5 +74,33 @@ subprojects {
     maven { url 'https://jitpack.io' }
   }
 }
+
+project(':lwjgl3') {
+  // Desktop-specific configuration is defined in lwjgl3/build.gradle, but we
+  // declare the dependency coordinates here to keep everything centralized.
+  ext.desktopDependencies = [
+    "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion",
+    "com.badlogicgames.gdx:gdx-lwjgl3-angle:$gdxVersion",
+    "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+  ]
+}
+
+// Android and iOS launchers are available but disabled by default.
+// Uncomment the relevant blocks when enabling the platform-specific modules.
+// project(':android') {
+//   // Android launcher configuration placeholder (enable when needed).
+//   // dependencies {
+//   //   implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+//   //   implementation project(':core')
+//   // }
+// }
+//
+// project(':ios') {
+//   // iOS (RoboVM) launcher configuration placeholder (enable when needed).
+//   // dependencies {
+//   //   implementation "com.badlogicgames.gdx:gdx-backend-robovm:$gdxVersion"
+//   //   implementation project(':core')
+//   // }
+// }
 
 eclipse.project.name = 'minecraft-timeline' + '-parent'
