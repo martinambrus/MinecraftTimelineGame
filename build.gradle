@@ -13,7 +13,7 @@ buildscript {
 }
 
 ext {
-  junitVersion = '5.10.2'
+  junitVersion = '4.13.2'
   mockitoVersion = '5.13.0'
   assertjVersion = '3.26.3'
 }
