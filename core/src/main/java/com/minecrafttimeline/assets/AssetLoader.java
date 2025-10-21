@@ -338,7 +338,7 @@ public final class AssetLoader implements Disposable {
         }
 
         @Override
-        public Format getFormat() {
+        public Pixmap.Format getFormat() {
             return format;
         }
 
