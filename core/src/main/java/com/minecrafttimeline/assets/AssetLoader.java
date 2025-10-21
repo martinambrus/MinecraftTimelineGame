@@ -7,10 +7,13 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.minecrafttimeline.logging.Logger;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -243,15 +246,111 @@ public final class AssetLoader implements Disposable {
     }
 
     private Texture createPlaceholderTexture() {
-        final Pixmap pixmap = new Pixmap(2, 2, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.MAGENTA);
-        pixmap.fill();
-        pixmap.setColor(Color.BLACK);
-        pixmap.drawLine(0, 0, 1, 1);
-        pixmap.drawLine(1, 0, 0, 1);
-        final Texture texture = new Texture(pixmap);
-        pixmap.dispose();
-        return texture;
+        try {
+            final Pixmap pixmap = new Pixmap(2, 2, Pixmap.Format.RGBA8888);
+            pixmap.setColor(Color.MAGENTA);
+            pixmap.fill();
+            pixmap.setColor(Color.BLACK);
+            pixmap.drawLine(0, 0, 1, 1);
+            pixmap.drawLine(1, 0, 0, 1);
+            final Texture texture = new Texture(pixmap);
+            pixmap.dispose();
+            return texture;
+        } catch (GdxRuntimeException | UnsatisfiedLinkError exception) {
+            Logger.warn("Falling back to headless placeholder texture due to initialisation failure.");
+            return new Texture(new HeadlessPlaceholderTextureData(2, 2, Pixmap.Format.RGBA8888));
+        }
+    }
+
+    private static final class HeadlessPlaceholderTextureData implements TextureData {
+
+        private final int width;
+        private final int height;
+        private final Pixmap.Format format;
+        private boolean prepared;
+
+        HeadlessPlaceholderTextureData(final int width, final int height, final Pixmap.Format format) {
+            this.width = width;
+            this.height = height;
+            this.format = format;
+        }
+
+        @Override
+        public TextureDataType getType() {
+            return TextureDataType.Custom;
+        }
+
+        @Override
+        public boolean isPrepared() {
+            return prepared;
+        }
+
+        @Override
+        public void prepare() {
+            prepared = true;
+        }
+
+        @Override
+        public void consumeCustomData(final int target) {
+            if (!prepared) {
+                throw new IllegalStateException("Texture data must be prepared before consumption.");
+            }
+            final ByteBuffer pixels = BufferUtils.newByteBuffer(width * height * 4);
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    final boolean drawCross = x == y || x + y == width - 1;
+                    if (drawCross) {
+                        pixels.put((byte) 0);
+                        pixels.put((byte) 0);
+                        pixels.put((byte) 0);
+                    } else {
+                        pixels.put((byte) 0xFF);
+                        pixels.put((byte) 0);
+                        pixels.put((byte) 0xFF);
+                    }
+                    pixels.put((byte) 0xFF);
+                }
+            }
+            pixels.flip();
+            Gdx.gl.glTexImage2D(target, 0, Pixmap.Format.toGlFormat(format), width, height, 0,
+                Pixmap.Format.toGlFormat(format), Pixmap.Format.toGlType(format), pixels);
+            prepared = false;
+        }
+
+        @Override
+        public Pixmap consumePixmap() {
+            throw new UnsupportedOperationException("Headless placeholder texture does not expose Pixmap data.");
+        }
+
+        @Override
+        public boolean disposePixmap() {
+            return false;
+        }
+
+        @Override
+        public int getWidth() {
+            return width;
+        }
+
+        @Override
+        public int getHeight() {
+            return height;
+        }
+
+        @Override
+        public Format getFormat() {
+            return format;
+        }
+
+        @Override
+        public boolean useMipMaps() {
+            return false;
+        }
+
+        @Override
+        public boolean isManaged() {
+            return false;
+        }
     }
 
     private static final class NoOpSound implements Sound {
