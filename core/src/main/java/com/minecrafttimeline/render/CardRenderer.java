@@ -2,7 +2,7 @@ package com.minecrafttimeline.render;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -22,7 +22,7 @@ public class CardRenderer {
     private final Card card;
 
     private final Vector2 currentPosition = new Vector2();
-    private final Vector2 currentSize = new Vector2(1f, 1f);
+    private final Vector2 currentSize = new Vector2();
     private final Vector2 targetPosition = new Vector2();
     private final Vector2 targetSize = new Vector2(1f, 1f);
 
@@ -67,11 +67,11 @@ public class CardRenderer {
     }
 
     /**
-     * Draws the card using the provided {@link SpriteBatch}. The caller is responsible for batch lifecycle.
+     * Draws the card using the provided {@link Batch}. The caller is responsible for batch lifecycle.
      *
      * @param spriteBatch the batch used for rendering
      */
-    public void render(final SpriteBatch spriteBatch) {
+    public void render(final Batch spriteBatch) {
         final Texture texture = assetLoader.getTexture(card.imageAssetPath());
         final Color previousColor = new Color(spriteBatch.getColor());
         spriteBatch.setColor(previousColor.r, previousColor.g, previousColor.b, currentOpacity);

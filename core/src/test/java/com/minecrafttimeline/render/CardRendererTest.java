@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.minecrafttimeline.TestApplicationSupport;
 import com.minecrafttimeline.assets.AssetLoader;
@@ -61,7 +61,7 @@ class CardRendererTest {
 
     @Test
     void renderUsesSpriteBatchAndResetsColour() {
-        final SpriteBatch batch = mock(SpriteBatch.class);
+        final Batch batch = mock(Batch.class);
         final Color previous = new Color(1f, 1f, 1f, 1f);
         when(batch.getColor()).thenReturn(previous);
         final CardRenderer renderer = new CardRenderer(SAMPLE_CARD);

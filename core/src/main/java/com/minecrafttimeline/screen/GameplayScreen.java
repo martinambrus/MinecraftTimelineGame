@@ -3,10 +3,12 @@ package com.minecrafttimeline.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.minecrafttimeline.assets.AssetLoader;
@@ -32,7 +34,7 @@ public class GameplayScreen implements Screen {
 
     private final CardDeck deck;
     private final InputHandler inputHandler;
-    private final SpriteBatch spriteBatch;
+    private final Batch spriteBatch;
     private final Viewport viewport;
     private final List<CardRenderer> timelineRenderers = new ArrayList<>();
     private final List<CardRenderer> handRenderers = new ArrayList<>();
@@ -65,7 +67,7 @@ public class GameplayScreen implements Screen {
     public GameplayScreen(
             final CardDeck deck,
             final InputHandler inputHandler,
-            final SpriteBatch spriteBatch,
+            final Batch spriteBatch,
             final Viewport viewport) {
         this.deck = Objects.requireNonNull(deck, "deck");
         this.inputHandler = Objects.requireNonNull(inputHandler, "inputHandler");
@@ -140,6 +142,9 @@ public class GameplayScreen implements Screen {
     }
 
     private void renderDebug() {
+        if (GdxNativesLoader.disableNativesLoading) {
+            return;
+        }
         if (debugShapeRenderer == null) {
             debugShapeRenderer = new ShapeRenderer();
         }

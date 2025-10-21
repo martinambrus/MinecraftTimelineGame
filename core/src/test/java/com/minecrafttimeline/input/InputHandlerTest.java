@@ -9,6 +9,7 @@ import com.minecrafttimeline.TestApplicationSupport;
 import com.minecrafttimeline.assets.AssetLoader;
 import com.minecrafttimeline.cards.Card;
 import com.minecrafttimeline.render.CardRenderer;
+import com.minecrafttimeline.headless.HeadlessOrthographicCamera;
 import java.time.LocalDate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -75,7 +76,7 @@ class InputHandlerTest {
     @Test
     void touchDownUsesViewportCoordinates() {
         final InputHandler handler = new InputHandler();
-        final FitViewport viewport = new FitViewport(100f, 100f);
+        final FitViewport viewport = new FitViewport(100f, 100f, new HeadlessOrthographicCamera(100f, 100f));
         viewport.update(200, 200, true);
         handler.setViewport(viewport);
         final CardRenderer renderer = new CardRenderer(SAMPLE_CARD);
