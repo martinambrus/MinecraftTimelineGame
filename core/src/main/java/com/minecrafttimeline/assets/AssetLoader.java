@@ -9,9 +9,11 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.minecrafttimeline.logging.Logger;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -38,7 +40,7 @@ public final class AssetLoader implements Disposable {
 
     private AssetLoader() {
         placeholderTexture = createPlaceholderTexture();
-        placeholderFont = new BitmapFont();
+        placeholderFont = createPlaceholderFont();
         placeholderSound = new NoOpSound();
         placeholderMusic = new NoOpMusic();
     }
@@ -169,12 +171,12 @@ public final class AssetLoader implements Disposable {
 
     private Texture loadTextureSafely(final String assetPath) {
         final FileHandle handle = resolveHandle(assetPath);
-        if (handle == null) {
+        if (handle == null || shouldUseHeadlessFallback()) {
             return placeholderTexture;
         }
         try {
             return new Texture(handle);
-        } catch (GdxRuntimeException ex) {
+        } catch (GdxRuntimeException | UnsatisfiedLinkError ex) {
             Logger.warn("Failed to load texture {} - using placeholder.", assetPath);
             return placeholderTexture;
         }
@@ -182,12 +184,12 @@ public final class AssetLoader implements Disposable {
 
     private BitmapFont loadFontSafely(final String assetPath) {
         final FileHandle handle = resolveHandle(assetPath);
-        if (handle == null) {
+        if (handle == null || shouldUseHeadlessFallback()) {
             return placeholderFont;
         }
         try {
             return new BitmapFont(handle);
-        } catch (GdxRuntimeException ex) {
+        } catch (GdxRuntimeException | UnsatisfiedLinkError ex) {
             Logger.warn("Failed to load font {} - using placeholder.", assetPath);
             return placeholderFont;
         }
@@ -259,6 +261,34 @@ public final class AssetLoader implements Disposable {
         } catch (GdxRuntimeException | UnsatisfiedLinkError exception) {
             Logger.warn("Falling back to headless placeholder texture due to initialisation failure.");
             return new Texture(new HeadlessPlaceholderTextureData(2, 2, Pixmap.Format.RGBA8888));
+        }
+    }
+
+    private BitmapFont createPlaceholderFont() {
+        try {
+            return new BitmapFont();
+        } catch (GdxRuntimeException | UnsatisfiedLinkError exception) {
+            Logger.warn("Falling back to headless placeholder font due to initialisation failure.");
+            final BitmapFont.BitmapFontData data = new BitmapFont.BitmapFontData();
+            data.lineHeight = 1f;
+            data.capHeight = 1f;
+            data.ascent = 0f;
+            data.descent = 0f;
+            data.down = -1f;
+            data.spaceXadvance = 1f;
+
+            final BitmapFont.Glyph missingGlyph = new BitmapFont.Glyph();
+            missingGlyph.id = 0;
+            missingGlyph.xadvance = 1;
+            missingGlyph.page = 0;
+            data.missingGlyph = missingGlyph;
+
+            final BitmapFont.Glyph spaceGlyph = new BitmapFont.Glyph();
+            spaceGlyph.id = ' ';
+            spaceGlyph.xadvance = 1;
+            spaceGlyph.page = 0;
+            data.setGlyph(spaceGlyph.id, spaceGlyph);
+            return new BitmapFont(data, new TextureRegion(placeholderTexture), true);
         }
     }
 
@@ -351,6 +381,10 @@ public final class AssetLoader implements Disposable {
         public boolean isManaged() {
             return false;
         }
+    }
+
+    private boolean shouldUseHeadlessFallback() {
+        return GdxNativesLoader.disableNativesLoading;
     }
 
     private static final class NoOpSound implements Sound {
