@@ -1,72 +1,45 @@
 package com.minecrafttimeline;
 
 import com.badlogic.gdx.Game;
-import com.minecrafttimeline.logging.Logger;
-import com.minecrafttimeline.logging.Logger.LogLevel;
-import com.minecrafttimeline.screen.BlackScreen;
+import com.badlogic.gdx.Gdx;
+import com.minecrafttimeline.core.util.Logger;
+import com.minecrafttimeline.screens.BlackScreen;
 
 /**
- * Main libGDX {@link Game} implementation for the Minecraft Timeline card game.
- * <p>
- * The class bootstraps the logging system and presents a placeholder black
- * screen until gameplay systems are introduced.
+ * Main libGDX game entry point for the Minecraft Timeline card game.
  */
 public class MinecraftTimelineGame extends Game {
 
-    /**
-     * Creates the game instance, configures logging, and sets the initial screen.
-     */
+    private static final int FPS_LOG_INTERVAL = 60;
+    private int frameCounter;
+
+    /** {@inheritDoc} */
     @Override
     public void create() {
-        Logger.setLogLevel(LogLevel.INFO);
-        Logger.info("MinecraftTimelineGame initialising.");
+        Logger.info("Game started");
         setScreen(new BlackScreen());
     }
 
-    /**
-     * Delegates rendering to the active {@link com.badlogic.gdx.Screen}.
-     */
-    @Override
-    public void render() {
-        super.render();
-    }
-
-    /**
-     * Handles window resizing events.
-     *
-     * @param width  the new window width in pixels
-     * @param height the new window height in pixels
-     */
+    /** {@inheritDoc} */
     @Override
     public void resize(final int width, final int height) {
         super.resize(width, height);
-        Logger.debug("Resized to {}x{} pixels.", width, height);
     }
 
-    /**
-     * Called when the game is paused.
-     */
+    /** {@inheritDoc} */
     @Override
-    public void pause() {
-        super.pause();
-        Logger.info("Game paused.");
+    public void render() {
+        frameCounter++;
+        if (frameCounter >= FPS_LOG_INTERVAL) {
+            frameCounter = 0;
+            Logger.info("FPS: " + Gdx.graphics.getFramesPerSecond());
+        }
+        super.render();
     }
 
-    /**
-     * Called when the game resumes from a paused state.
-     */
-    @Override
-    public void resume() {
-        super.resume();
-        Logger.info("Game resumed.");
-    }
-
-    /**
-     * Releases managed resources before shutdown.
-     */
+    /** {@inheritDoc} */
     @Override
     public void dispose() {
-        Logger.info("Disposing MinecraftTimelineGame.");
         super.dispose();
     }
 }
