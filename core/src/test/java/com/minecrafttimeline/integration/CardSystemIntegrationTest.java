@@ -22,7 +22,7 @@ class CardSystemIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        final Path triviaPath = Path.of("core", "assets", "data", "trivia.json");
+        final Path triviaPath = Path.of("assets", "data", "trivia.json");
         cards = TriviaDatabaseLoader.loadFromJson(triviaPath.toString());
         CardManager.getInstance().initialize(triviaPath.toString());
         deck = new CardDeck(cards);
