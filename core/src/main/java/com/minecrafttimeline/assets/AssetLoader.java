@@ -412,9 +412,5 @@ public final class AssetLoader implements Disposable {
             // no-op
         }
 
-        @Override
-        public void setPitch(final float pitch) {
-            // no-op
-        }
     }
 }
