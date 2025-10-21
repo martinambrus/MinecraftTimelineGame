@@ -190,6 +190,13 @@ public class InputHandler implements InputProcessor {
         return true;
     }
 
+    @Override
+    public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
+        final Vector2 world = convertToWorldCoordinates(screenX, screenY);
+        trackPointerUp(world.x, world.y);
+        return true;
+    }
+
     /**
      * Handles pointer down events at the specified coordinates.
      *
