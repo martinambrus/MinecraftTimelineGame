@@ -2,6 +2,7 @@ package com.minecrafttimeline.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +23,14 @@ class CardSystemIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        final Path triviaPath = Path.of("assets", "data", "trivia.json");
+        Path triviaPath = Path.of("assets", "data", "trivia.json");
+        if (!Files.exists(triviaPath)) {
+            triviaPath = Path.of("core", "assets", "data", "trivia.json");
+        }
+
+        if (!Files.exists(triviaPath)) {
+            throw new IllegalStateException("Unable to locate trivia database for integration test");
+        }
         cards = TriviaDatabaseLoader.loadFromJson(triviaPath.toString());
         CardManager.getInstance().initialize(triviaPath.toString());
         deck = new CardDeck(cards);
