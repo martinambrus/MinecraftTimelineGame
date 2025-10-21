@@ -73,7 +73,7 @@ public class CardRenderer {
      */
     public void render(final SpriteBatch spriteBatch) {
         final Texture texture = assetLoader.getTexture(card.imageAssetPath());
-        final Color previousColor = spriteBatch.getColor();
+        final Color previousColor = new Color(spriteBatch.getColor());
         spriteBatch.setColor(previousColor.r, previousColor.g, previousColor.b, currentOpacity);
         spriteBatch.draw(
                 texture,
