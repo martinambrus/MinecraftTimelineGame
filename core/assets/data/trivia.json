@@ -1,0 +1,122 @@
+[
+  {
+    "id": "classic_release",
+    "title": "Minecraft Classic Released",
+    "date": "2009-05-17",
+    "trivia": "Markus Persson made Minecraft publicly available in its Classic phase, laying the foundation for the game's future.",
+    "imageAssetPath": "images/cards/classic_release.png",
+    "version": "Classic 0.0.11a"
+  },
+  {
+    "id": "alpha_release",
+    "title": "Minecraft Alpha Debuts",
+    "date": "2010-06-28",
+    "trivia": "The Alpha stage introduced survival elements and frequent updates that rapidly expanded Minecraft's scope.",
+    "imageAssetPath": "images/cards/alpha_release.png",
+    "version": "Alpha 1.0.4"
+  },
+  {
+    "id": "beta_1_0",
+    "title": "Minecraft Beta Begins",
+    "date": "2010-12-20",
+    "trivia": "Beta 1.0 marked the start of paid access and ongoing feature-rich updates to Minecraft.",
+    "imageAssetPath": "images/cards/beta_1_0.png",
+    "version": "Beta 1.0"
+  },
+  {
+    "id": "release_1_0",
+    "title": "Minecraft 1.0 Launch",
+    "date": "2011-11-18",
+    "trivia": "Official release during MineCon 2011 delivered The End dimension and the Ender Dragon boss.",
+    "imageAssetPath": "images/cards/release_1_0.png",
+    "version": "1.0.0"
+  },
+  {
+    "id": "release_1_2_1",
+    "title": "Jungle Biomes Arrive",
+    "date": "2012-03-01",
+    "trivia": "Minecraft 1.2.1 added jungle biomes, ocelots, and height doubled to 256 blocks.",
+    "imageAssetPath": "images/cards/release_1_2_1.png",
+    "version": "1.2.1"
+  },
+  {
+    "id": "horse_update",
+    "title": "The Horse Update",
+    "date": "2013-07-01",
+    "trivia": "Minecraft 1.6 introduced horses, carpets, and resource packs, revolutionizing traversal and customization.",
+    "imageAssetPath": "images/cards/horse_update.png",
+    "version": "1.6.1"
+  },
+  {
+    "id": "bountiful_update",
+    "title": "The Bountiful Update",
+    "date": "2014-09-02",
+    "trivia": "Version 1.8 revamped ocean monuments, added rabbits, and introduced new commands and blocks.",
+    "imageAssetPath": "images/cards/bountiful_update.png",
+    "version": "1.8"
+  },
+  {
+    "id": "combat_update",
+    "title": "Combat Update Released",
+    "date": "2016-02-29",
+    "trivia": "Minecraft 1.9 added elytra wings, shields, and sweeping changes to combat timing.",
+    "imageAssetPath": "images/cards/combat_update.png",
+    "version": "1.9"
+  },
+  {
+    "id": "world_of_color",
+    "title": "World of Color Update",
+    "date": "2017-06-07",
+    "trivia": "Minecraft 1.12 refreshed the palette with vibrant blocks and the advancement system.",
+    "imageAssetPath": "images/cards/world_of_color.png",
+    "version": "1.12"
+  },
+  {
+    "id": "village_pillage",
+    "title": "Village & Pillage Update",
+    "date": "2019-04-23",
+    "trivia": "Version 1.14 redesigned villages, added pillagers, and introduced scaffolding and many new blocks.",
+    "imageAssetPath": "images/cards/village_pillage.png",
+    "version": "1.14"
+  },
+  {
+    "id": "buzzy_bees",
+    "title": "Buzzy Bees Update",
+    "date": "2019-12-10",
+    "trivia": "Minecraft 1.15 brought bees, honey blocks, and performance optimizations.",
+    "imageAssetPath": "images/cards/buzzy_bees.png",
+    "version": "1.15"
+  },
+  {
+    "id": "nether_update",
+    "title": "Nether Update Released",
+    "date": "2020-06-23",
+    "trivia": "Version 1.16 overhauled the Nether with new biomes, blocks, and the piglin civilization.",
+    "imageAssetPath": "images/cards/nether_update.png",
+    "version": "1.16"
+  },
+  {
+    "id": "caves_cliffs_part2",
+    "title": "Caves & Cliffs Part II",
+    "date": "2021-11-30",
+    "trivia": "Minecraft 1.18 reimagined world generation with massive mountains and deep caves.",
+    "imageAssetPath": "images/cards/caves_cliffs_part2.png",
+    "version": "1.18"
+  },
+  {
+    "id": "wild_update",
+    "title": "The Wild Update",
+    "date": "2022-06-07",
+    "trivia": "Version 1.19 introduced the Deep Dark, mangrove swamps, and the Warden boss.",
+    "imageAssetPath": "images/cards/wild_update.png",
+    "version": "1.19"
+  },
+  {
+    "id": "trails_tales",
+    "title": "Trails & Tales Update",
+    "date": "2023-06-07",
+    "trivia": "Minecraft 1.20 added archaeology, cherry groves, and new camel mounts for exploration.",
+    "imageAssetPath": "images/cards/trails_tales.png",
+    "version": "1.20"
+  }
+]
