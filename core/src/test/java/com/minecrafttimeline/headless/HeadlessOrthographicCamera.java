@@ -17,11 +17,21 @@ public final class HeadlessOrthographicCamera extends OrthographicCamera {
 
     @Override
     public void update() {
-        super.update(false);
+        update(true);
     }
 
     @Override
     public void update(final boolean updateFrustum) {
-        super.update(false);
+        if (!updateFrustum) {
+            super.update(false);
+            invProjectionView.set(combined).inv();
+            return;
+        }
+        try {
+            super.update(true);
+        } catch (final UnsatisfiedLinkError error) {
+            super.update(false);
+            invProjectionView.set(combined).inv();
+        }
     }
 }
