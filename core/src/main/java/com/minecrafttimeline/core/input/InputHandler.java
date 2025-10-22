@@ -92,6 +92,11 @@ public class InputHandler implements InputProcessor {
         return false;
     }
 
+    @Override
+    public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
+        return false;
+    }
+
     /**
      * Retrieves the currently selected {@link CardRenderer}, if any.
      *
