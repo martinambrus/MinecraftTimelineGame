@@ -16,7 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public final class CardDeck {
 
     private final Lock lock = new ReentrantLock();
-    private final Random random = new Random();
+    private Random random = new Random();
     private final List<Card> cards;
 
     /**
@@ -140,6 +140,20 @@ public final class CardDeck {
         lock.lock();
         try {
             return List.copyOf(cards);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Replaces the random source used for shuffling. Primarily intended for deterministic testing.
+     *
+     * @param randomSource random instance to use for subsequent shuffles; must not be {@code null}
+     */
+    void setRandom(final Random randomSource) {
+        lock.lock();
+        try {
+            random = Objects.requireNonNull(randomSource, "randomSource must not be null");
         } finally {
             lock.unlock();
         }

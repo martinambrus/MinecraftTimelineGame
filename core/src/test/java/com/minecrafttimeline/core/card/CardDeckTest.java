@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ class CardDeckTest {
     @BeforeEach
     void setUp() {
         deck = new CardDeck(createCards(10));
+        deck.setRandom(new Random(653L));
     }
 
     @Test
@@ -99,6 +101,7 @@ class CardDeckTest {
         final int iterations = 2000;
         final List<Card> cards = createCards(5);
         final CardDeck localDeck = new CardDeck(cards);
+        localDeck.setRandom(new Random(653L));
         final Map<String, Integer> firstPositionCounts = new HashMap<>();
         for (Card card : cards) {
             firstPositionCounts.put(card.getId(), 0);

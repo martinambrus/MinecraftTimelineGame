@@ -76,7 +76,8 @@ public class ViewportConfig {
     public Vector2 worldToScreenCoordinates(final float worldX, final float worldY) {
         tempVec3.set(worldX, worldY, 0f);
         viewport.project(tempVec3);
-        reusableScreen.set(tempVec3.x, tempVec3.y);
+        final float screenHeight = viewport.getScreenHeight();
+        reusableScreen.set(tempVec3.x, screenHeight - tempVec3.y);
         return reusableScreen;
     }
 
