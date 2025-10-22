@@ -55,7 +55,7 @@ public class GameplayScreen implements Screen {
     @Override
     public void show() {
         spriteBatch = new SpriteBatch();
-        fpsFont = AssetLoader.getInstance().getBitmapFont("fonts/default.fnt");
+        fpsFont = new BitmapFont(); // Use libGDX's built-in default font
         fpsFont.setColor(Color.WHITE);
 
         layoutCards();
@@ -153,6 +153,9 @@ public class GameplayScreen implements Screen {
     public void dispose() {
         if (spriteBatch != null) {
             spriteBatch.dispose();
+        }
+        if (fpsFont != null) {
+            fpsFont.dispose();
         }
     }
 
