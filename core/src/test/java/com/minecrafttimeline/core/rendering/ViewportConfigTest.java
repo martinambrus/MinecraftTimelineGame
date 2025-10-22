@@ -43,8 +43,13 @@ class ViewportConfigTest {
 
     @Test
     void screenToWorldCoordinatesRespectOrigin() {
-        final Vector2 world = viewportConfig.screenToWorldCoordinates(0, 0);
-        assertThat(world.x).isCloseTo(0f, org.assertj.core.data.Offset.offset(0.1f));
-        assertThat(world.y).isCloseTo(0f, org.assertj.core.data.Offset.offset(0.1f));
+        final Vector2 topLeftWorld = viewportConfig.screenToWorldCoordinates(0, 0);
+        assertThat(topLeftWorld.x).isCloseTo(0f, org.assertj.core.data.Offset.offset(0.1f));
+        assertThat(topLeftWorld.y).isCloseTo(ViewportConfig.BASE_HEIGHT, org.assertj.core.data.Offset.offset(0.1f));
+
+        final int screenHeight = viewportConfig.getViewport().getScreenHeight();
+        final Vector2 bottomLeftWorld = viewportConfig.screenToWorldCoordinates(0, screenHeight);
+        assertThat(bottomLeftWorld.x).isCloseTo(0f, org.assertj.core.data.Offset.offset(0.1f));
+        assertThat(bottomLeftWorld.y).isCloseTo(0f, org.assertj.core.data.Offset.offset(0.1f));
     }
 }
