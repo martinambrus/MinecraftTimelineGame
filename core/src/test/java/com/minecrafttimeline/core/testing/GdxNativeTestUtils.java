@@ -4,8 +4,9 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
-import com.badlogic.gdx.backends.headless.mock.graphics.MockGL20;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.GdxNativesLoader;
+import org.mockito.Mockito;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -39,8 +40,8 @@ public final class GdxNativeTestUtils {
         if (HEADLESS_INITIALIZED.compareAndSet(false, true)) {
             final HeadlessApplicationConfiguration configuration = new HeadlessApplicationConfiguration();
             headlessApplication = new HeadlessApplication(new ApplicationAdapter() {}, configuration);
-            Gdx.gl = new MockGL20();
-            Gdx.gl20 = Gdx.gl;
+            Gdx.gl = Mockito.mock(GL20.class);
+            Gdx.gl20 = (GL20) Gdx.gl;
         }
     }
 }
