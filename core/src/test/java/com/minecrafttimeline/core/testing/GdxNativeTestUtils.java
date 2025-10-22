@@ -1,5 +1,8 @@
 package com.minecrafttimeline.core.testing;
 
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.backends.headless.HeadlessApplication;
+import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -9,6 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class GdxNativeTestUtils {
 
     private static final AtomicBoolean LOADED = new AtomicBoolean();
+    private static final AtomicBoolean HEADLESS_INITIALIZED = new AtomicBoolean();
+    private static HeadlessApplication headlessApplication;
 
     private GdxNativeTestUtils() {
         // utility class
@@ -20,6 +25,18 @@ public final class GdxNativeTestUtils {
     public static void loadNativesIfNeeded() {
         if (LOADED.compareAndSet(false, true)) {
             GdxNativesLoader.load();
+        }
+    }
+
+    /**
+     * Ensures a libGDX headless application is running so static {@code Gdx} services are available.
+     * This is primarily required for tests that rely on {@code Gdx.graphics} during viewport updates.
+     */
+    public static void ensureHeadlessApplication() {
+        loadNativesIfNeeded();
+        if (HEADLESS_INITIALIZED.compareAndSet(false, true)) {
+            final HeadlessApplicationConfiguration configuration = new HeadlessApplicationConfiguration();
+            headlessApplication = new HeadlessApplication(new ApplicationAdapter() {}, configuration);
         }
     }
 }

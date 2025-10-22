@@ -16,8 +16,8 @@ class ViewportConfigTest {
     private ViewportConfig viewportConfig;
 
     @BeforeAll
-    static void loadNatives() {
-        GdxNativeTestUtils.loadNativesIfNeeded();
+    static void bootstrapGdx() {
+        GdxNativeTestUtils.ensureHeadlessApplication();
     }
 
     @BeforeEach
