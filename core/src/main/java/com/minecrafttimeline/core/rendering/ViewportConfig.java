@@ -26,8 +26,10 @@ public class ViewportConfig {
      * Creates a viewport configured with a 1280x720 orthographic camera.
      */
     public ViewportConfig() {
-        camera = new OrthographicCamera(BASE_WIDTH, BASE_HEIGHT);
+        camera = new OrthographicCamera();
         viewport = new ExtendViewport(BASE_WIDTH, BASE_HEIGHT, camera);
+        camera.setToOrtho(false, BASE_WIDTH, BASE_HEIGHT);
+        camera.update();
     }
 
     /**
@@ -49,8 +51,9 @@ public class ViewportConfig {
      * @return {@code out} for chaining
      */
     public Vector2 screenToWorldCoordinates(final int screenX, final int screenY, final Vector2 out) {
-        final float screenHeight = viewport.getScreenHeight();
-        tempVec3.set(screenX, screenHeight - screenY, 0f);
+        final float adjustedX = screenX - viewport.getScreenX();
+        final float adjustedY = viewport.getScreenY() + viewport.getScreenHeight() - screenY;
+        tempVec3.set(adjustedX, adjustedY, 0f);
         viewport.unproject(tempVec3);
         out.set(tempVec3.x, tempVec3.y);
         return out;
@@ -77,8 +80,9 @@ public class ViewportConfig {
     public Vector2 worldToScreenCoordinates(final float worldX, final float worldY) {
         tempVec3.set(worldX, worldY, 0f);
         viewport.project(tempVec3);
-        final float screenHeight = viewport.getScreenHeight();
-        reusableScreen.set(tempVec3.x, screenHeight - tempVec3.y);
+        final float projectedX = tempVec3.x + viewport.getScreenX();
+        final float projectedY = viewport.getScreenY() + viewport.getScreenHeight() - tempVec3.y;
+        reusableScreen.set(projectedX, projectedY);
         return reusableScreen;
     }
 
