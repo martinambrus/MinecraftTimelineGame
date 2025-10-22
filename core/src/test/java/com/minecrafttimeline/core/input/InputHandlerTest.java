@@ -1,6 +1,9 @@
 package com.minecrafttimeline.core.input;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +31,8 @@ class InputHandlerTest {
     private AssetLoader assetLoader;
     private ViewportConfig viewportConfig;
 
+    private static final float WORLD_TO_SCREEN_SCALE = 2f;
+
     @BeforeEach
     void setUp() {
         assetLoader = AssetLoader.getInstance();
@@ -40,8 +45,25 @@ class InputHandlerTest {
         when(texture.getHeight()).thenReturn(256);
         assetLoader.initializeWithManager(assetManager);
         assetLoader.setPlaceholderTexture(texture);
-        viewportConfig = new ViewportConfig();
-        viewportConfig.update((int) ViewportConfig.BASE_WIDTH, (int) ViewportConfig.BASE_HEIGHT);
+        viewportConfig = mock(ViewportConfig.class);
+        when(viewportConfig.worldToScreenCoordinates(anyFloat(), anyFloat()))
+                .thenAnswer(invocation -> {
+                    final float worldX = invocation.getArgument(0);
+                    final float worldY = invocation.getArgument(1);
+                    return new Vector2(worldX * WORLD_TO_SCREEN_SCALE, worldY * WORLD_TO_SCREEN_SCALE);
+                });
+        when(viewportConfig.screenToWorldCoordinates(anyInt(), anyInt(), any(Vector2.class)))
+                .thenAnswer(invocation -> {
+                    final int screenX = invocation.getArgument(0);
+                    final int screenY = invocation.getArgument(1);
+                    final Vector2 out = invocation.getArgument(2);
+                    out.set(screenX / WORLD_TO_SCREEN_SCALE, screenY / WORLD_TO_SCREEN_SCALE);
+                    return out;
+                });
+        when(viewportConfig.screenToWorldCoordinates(anyInt(), anyInt()))
+                .thenAnswer(invocation -> new Vector2(
+                        invocation.getArgument(0, Integer.class) / WORLD_TO_SCREEN_SCALE,
+                        invocation.getArgument(1, Integer.class) / WORLD_TO_SCREEN_SCALE));
     }
 
     @AfterEach
