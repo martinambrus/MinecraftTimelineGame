@@ -24,9 +24,8 @@ public class MinecraftTimelineGame extends Game {
     public void create() {
         Logger.info("Game started");
         AssetLoader.getInstance().initialize();
-        final String triviaPath = Gdx.files.internal("data/trivia.json").file().getAbsolutePath();
         final CardManager cardManager = CardManager.getInstance();
-        cardManager.initialize(triviaPath);
+        cardManager.initialize(Gdx.files.internal("data/trivia.json"));
 
         final List<Card> sortedCards = new ArrayList<>(cardManager.getAllCards());
         sortedCards.sort(Comparator.comparing(Card::getDate));

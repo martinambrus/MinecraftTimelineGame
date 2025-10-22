@@ -1,5 +1,8 @@
 package com.minecrafttimeline.core.card;
 
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +46,33 @@ public final class CardManager {
         Objects.requireNonNull(triviaDatabasePath, "triviaDatabasePath must not be null");
 
         final List<Card> loadedCards = TriviaDatabaseLoader.loadFromJson(triviaDatabasePath);
+        applyLoadedCards(loadedCards);
+    }
 
+    /**
+     * Initializes the manager by loading cards from the provided {@link FileHandle}.
+     * Subsequent calls replace the currently loaded data.
+     *
+     * @param triviaDatabaseHandle handle referencing the trivia database; must not be {@code null}
+     * @throws IllegalArgumentException if the handle cannot be read or contains invalid data
+     */
+    public void initialize(final FileHandle triviaDatabaseHandle) {
+        Objects.requireNonNull(triviaDatabaseHandle, "triviaDatabaseHandle must not be null");
+
+        final String rawJson;
+        try {
+            rawJson = triviaDatabaseHandle.readString(StandardCharsets.UTF_8.name());
+        } catch (GdxRuntimeException e) {
+            throw new IllegalArgumentException(
+                    "Failed to read trivia database: " + triviaDatabaseHandle.path(), e);
+        }
+
+        final List<Card> loadedCards = TriviaDatabaseLoader.loadFromJsonContent(
+                rawJson, triviaDatabaseHandle.path());
+        applyLoadedCards(loadedCards);
+    }
+
+    private void applyLoadedCards(final List<Card> loadedCards) {
         lock.lock();
         try {
             cards = List.copyOf(loadedCards);

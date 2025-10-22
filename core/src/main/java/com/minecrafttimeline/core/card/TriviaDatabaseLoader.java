@@ -45,11 +45,28 @@ public final class TriviaDatabaseLoader {
             throw new IllegalArgumentException("Failed to read trivia database: " + filePath, e);
         }
 
+        return parseCards(rawJson, filePath);
+    }
+
+    /**
+     * Loads cards from the provided JSON trivia database content.
+     *
+     * @param rawJson raw JSON content describing the trivia database; must not be {@code null}
+     * @param sourceDescription description of the source for error messages; may be {@code null}
+     * @return immutable list of {@link Card} entries parsed from the content
+     */
+    public static List<Card> loadFromJsonContent(final String rawJson, final String sourceDescription) {
+        Objects.requireNonNull(rawJson, "rawJson must not be null");
+        return parseCards(rawJson, sourceDescription);
+    }
+
+    private static List<Card> parseCards(final String rawJson, final String sourceDescription) {
         final JSONArray array;
         try {
             array = new JSONArray(rawJson);
         } catch (JSONException e) {
-            throw new IllegalArgumentException("Invalid JSON structure in trivia database: " + filePath, e);
+            throw new IllegalArgumentException(
+                    "Invalid JSON structure in trivia database: " + sourceDescription, e);
         }
 
         final List<Card> cards = new ArrayList<>();
