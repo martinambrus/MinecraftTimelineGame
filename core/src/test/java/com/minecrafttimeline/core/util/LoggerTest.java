@@ -47,6 +47,15 @@ class LoggerTest {
     }
 
     @Test
+    void errorWithThrowableIncludesStackTrace() {
+        final RuntimeException exception = new RuntimeException("boom");
+        Logger.error("Failure", exception);
+        final String output = capturedErr.toString();
+        assertThat(output).contains("[ERROR] Failure");
+        assertThat(output).contains("java.lang.RuntimeException: boom");
+    }
+
+    @Test
     void logMessagesIncludeTimestamp() {
         Logger.info("Timestamp check");
         final String output = capturedOut.toString();
