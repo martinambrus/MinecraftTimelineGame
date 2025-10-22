@@ -51,7 +51,6 @@ class AssetLoaderTest {
     void getTextureCachesLoadedInstance() {
         when(assetManager.isLoaded(TEXTURE_PATH, Texture.class)).thenReturn(false, true);
         doNothing().when(assetManager).load(TEXTURE_PATH, Texture.class);
-        doNothing().when(assetManager).finishLoadingAsset(TEXTURE_PATH);
         when(assetManager.get(TEXTURE_PATH, Texture.class)).thenReturn(texture);
 
         final Texture first = assetLoader.getTexture(TEXTURE_PATH);
