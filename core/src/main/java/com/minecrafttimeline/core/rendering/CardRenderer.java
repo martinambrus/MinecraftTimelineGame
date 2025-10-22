@@ -46,7 +46,11 @@ public class CardRenderer {
         this(card, x, y, width, height, AssetLoader.getInstance());
     }
 
-    CardRenderer(
+    /**
+     * Creates a renderer with a caller-supplied {@link AssetLoader}. Primarily used for tests where a
+     * mock loader is injected.
+     */
+    public CardRenderer(
             final Card card,
             final float x,
             final float y,
