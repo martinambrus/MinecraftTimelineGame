@@ -42,6 +42,13 @@ class CardManagerTest {
     }
 
     @Test
+    void initializeFromFileHandleLoadsCards() {
+        CardManager.getInstance().initialize(new com.badlogic.gdx.files.FileHandle(databasePath.toFile()));
+
+        assertThat(CardManager.getInstance().getTotalCardCount()).isEqualTo(2);
+    }
+
+    @Test
     void getCardByIdReturnsCorrectCard() {
         final Card card = CardManager.getInstance().getCardById("first");
         assertThat(card.getTitle()).isEqualTo("First Card");
