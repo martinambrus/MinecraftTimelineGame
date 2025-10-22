@@ -3,7 +3,9 @@ package com.minecrafttimeline.core.rendering;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.badlogic.gdx.math.Vector2;
+import com.minecrafttimeline.core.testing.GdxNativeTestUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -12,6 +14,11 @@ import org.junit.jupiter.api.Test;
 class ViewportConfigTest {
 
     private ViewportConfig viewportConfig;
+
+    @BeforeAll
+    static void loadNatives() {
+        GdxNativeTestUtils.loadNativesIfNeeded();
+    }
 
     @BeforeEach
     void setUp() {
