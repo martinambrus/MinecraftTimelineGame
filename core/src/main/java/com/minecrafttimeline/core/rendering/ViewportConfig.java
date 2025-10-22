@@ -53,8 +53,7 @@ public class ViewportConfig {
      * @return {@code out} for chaining
      */
     public Vector2 screenToWorldCoordinates(final int screenX, final int screenY, final Vector2 out) {
-        final float normalizedY = lastScreenHeight - screenY;
-        tempVec3.set(screenX, normalizedY, 0f);
+        tempVec3.set(screenX, screenY, 0f);
         viewport.unproject(tempVec3);
         out.set(tempVec3.x, tempVec3.y);
         return out;
