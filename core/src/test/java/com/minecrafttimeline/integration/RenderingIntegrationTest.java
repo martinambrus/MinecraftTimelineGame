@@ -15,6 +15,7 @@ import com.minecrafttimeline.core.card.CardManager;
 import com.minecrafttimeline.core.input.InputHandler;
 import com.minecrafttimeline.core.rendering.CardRenderer;
 import com.minecrafttimeline.core.rendering.ViewportConfig;
+import com.minecrafttimeline.core.testing.GdxNativeTestUtils;
 import com.minecrafttimeline.core.util.AssetLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +33,11 @@ import org.junit.jupiter.api.Test;
 class RenderingIntegrationTest {
 
     private AssetLoader assetLoader;
+
+    @BeforeAll
+    static void bootstrapGdx() {
+        GdxNativeTestUtils.ensureHeadlessApplication();
+    }
 
     @BeforeEach
     void setUp() {

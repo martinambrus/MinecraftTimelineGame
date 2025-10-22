@@ -1,8 +1,10 @@
 package com.minecrafttimeline.core.testing;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
+import com.badlogic.gdx.backends.headless.mock.graphics.MockGL20;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -37,6 +39,8 @@ public final class GdxNativeTestUtils {
         if (HEADLESS_INITIALIZED.compareAndSet(false, true)) {
             final HeadlessApplicationConfiguration configuration = new HeadlessApplicationConfiguration();
             headlessApplication = new HeadlessApplication(new ApplicationAdapter() {}, configuration);
+            Gdx.gl = new MockGL20();
+            Gdx.gl20 = Gdx.gl;
         }
     }
 }
