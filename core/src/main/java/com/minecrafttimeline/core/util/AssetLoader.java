@@ -53,7 +53,10 @@ public final class AssetLoader {
         return new InternalFileHandleResolver();
     }
 
-    void initializeWithManager(final AssetManager manager) {
+    /**
+     * Visible for testing to inject a custom {@link AssetManager} without touching global state.
+     */
+    public void initializeWithManager(final AssetManager manager) {
         initializeInternal(manager);
     }
 
@@ -233,7 +236,10 @@ public final class AssetLoader {
         }
     }
 
-    void setPlaceholderTexture(final Texture texture) {
+    /**
+     * Visible for testing so unit tests can inject deterministic placeholder textures.
+     */
+    public void setPlaceholderTexture(final Texture texture) {
         lock.lock();
         try {
             placeholderTexture = texture;
@@ -242,7 +248,10 @@ public final class AssetLoader {
         }
     }
 
-    void resetForTesting() {
+    /**
+     * Clears all cached resources; exposed for tests that require a pristine loader state.
+     */
+    public void resetForTesting() {
         dispose();
     }
 }
