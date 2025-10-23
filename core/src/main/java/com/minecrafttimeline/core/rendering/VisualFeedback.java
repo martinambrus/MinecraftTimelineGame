@@ -71,7 +71,7 @@ public class VisualFeedback {
                 createSuccessFeedback(card);
                 break;
             case INVALID_PLACEMENT:
-                createInvalidFeedback(card);
+                createInvalidFeedback(card, position);
                 break;
             case CORRECT_DATE:
                 createSparkleFeedback(card, position);
@@ -95,9 +95,10 @@ public class VisualFeedback {
         createOverlay(card, Color.GREEN, SUCCESS_GLOW_ALPHA, SUCCESS_PULSE_DURATION * 2f);
     }
 
-    private void createInvalidFeedback(final CardRenderer card) {
+    private void createInvalidFeedback(final CardRenderer card, final Vector2 snapTarget) {
+        final Vector2 basePosition = snapTarget != null ? snapTarget : card.getPosition();
         final FeedbackBinding shakeBinding = createBinding(card, new CardAnimation(0f, 1f, INVALID_SHAKE_DURATION,
-                EasingFunctions::easeOutCubic));
+                EasingFunctions::easeOutCubic), basePosition);
         shakeBinding.animation.setType(AnimationType.SHAKE);
         shakeBinding.applier = (renderer, binding, value) -> {
             final float offset = (float) Math.sin(value * Math.PI * 6f) * INVALID_SHAKE_AMPLITUDE * (1f - value);
@@ -158,8 +159,13 @@ public class VisualFeedback {
     }
 
     private FeedbackBinding createBinding(final CardRenderer card, final CardAnimation animation) {
+        return createBinding(card, animation, null);
+    }
+
+    private FeedbackBinding createBinding(final CardRenderer card, final CardAnimation animation,
+            final Vector2 basePositionOverride) {
         animationManager.addAnimation(animation);
-        final FeedbackBinding binding = new FeedbackBinding(card, animation);
+        final FeedbackBinding binding = new FeedbackBinding(card, animation, basePositionOverride);
         bindings.add(binding);
         return binding;
     }
@@ -256,11 +262,16 @@ public class VisualFeedback {
         FeedbackApplier applier;
         boolean active = true;
 
-        FeedbackBinding(final CardRenderer card, final CardAnimation animation) {
+        FeedbackBinding(final CardRenderer card, final CardAnimation animation, final Vector2 basePositionOverride) {
             this.card = card;
             this.animation = animation;
-            baseX = card.getPosition().x;
-            baseY = card.getPosition().y;
+            if (basePositionOverride != null) {
+                baseX = basePositionOverride.x;
+                baseY = basePositionOverride.y;
+            } else {
+                baseX = card.getPosition().x;
+                baseY = card.getPosition().y;
+            }
             baseWidth = card.getSize().x;
             baseHeight = card.getSize().y;
             baseCenterX = baseX + (baseWidth / 2f);

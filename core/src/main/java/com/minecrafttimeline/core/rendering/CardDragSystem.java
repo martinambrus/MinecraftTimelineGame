@@ -101,7 +101,7 @@ public class CardDragSystem {
         } else {
             dropTarget.set(dragStartPosition);
             snapCardToPosition(card, dropTarget);
-            visualFeedback.displayFeedback(VisualFeedback.FeedbackType.INVALID_PLACEMENT, card, card.getCenter());
+            visualFeedback.displayFeedback(VisualFeedback.FeedbackType.INVALID_PLACEMENT, card, dragStartPosition);
         }
     }
 
