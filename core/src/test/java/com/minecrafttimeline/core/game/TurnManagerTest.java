@@ -135,6 +135,25 @@ class TurnManagerTest {
     }
 
     @Test
+    void redo_reappliesGameOverStateForWinningMove() {
+        populateTimeline(1990, 2000);
+        final Card winningCard = card("win", 1995);
+        players.get(0).addCardToHand(winningCard);
+
+        turnManager.applyCardPlacement(winningCard, 1);
+        assertThat(gameState.isGameOver()).isTrue();
+
+        turnManager.undo();
+        assertThat(gameState.isGameOver()).isFalse();
+
+        turnManager.redo();
+
+        assertThat(gameState.isGameOver()).isTrue();
+        assertThat(turnManager.getCurrentPhase()).isEqualTo(GamePhase.GAME_OVER);
+        assertThat(turnManager.getCurrentPlayer()).isEqualTo(players.get(0));
+    }
+
+    @Test
     void setCurrentPlayerIndex_restoresFromState() {
         turnManager.setCurrentPlayerIndex(1);
         assertThat(turnManager.getCurrentPlayer()).isEqualTo(players.get(1));

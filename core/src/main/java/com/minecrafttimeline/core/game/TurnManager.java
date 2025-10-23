@@ -272,10 +272,18 @@ public final class TurnManager {
         if (gameState != null) {
             gameState.addMoveToHistory(move);
         }
-        currentPlayerIndex = (move.getPlayerIndex() + 1) % players.size();
-        gameState.setCurrentPlayerIndex(currentPlayerIndex);
-        setPhase(move.isCorrect() ? GamePhase.CORRECT_PLACEMENT : GamePhase.INCORRECT_PLACEMENT);
-        fireTurnChanged();
+        final GamePhase placementPhase = move.isCorrect() ? GamePhase.CORRECT_PLACEMENT : GamePhase.INCORRECT_PLACEMENT;
+        setPhase(placementPhase);
+        if (GameRules.hasPlayerWon(player.getHand(), gameState.getTimeline())) {
+            currentPlayerIndex = move.getPlayerIndex();
+            gameState.setCurrentPlayerIndex(currentPlayerIndex);
+            setPhase(GamePhase.GAME_OVER);
+            fireGameOver(player);
+        } else {
+            currentPlayerIndex = (move.getPlayerIndex() + 1) % players.size();
+            gameState.setCurrentPlayerIndex(currentPlayerIndex);
+            fireTurnChanged();
+        }
         return move;
     }
 
