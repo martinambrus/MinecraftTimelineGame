@@ -52,7 +52,7 @@ public class VisualFeedback {
     public VisualFeedback(final AnimationManager manager, final AssetLoader assetLoader) {
         animationManager = Objects.requireNonNull(manager, "manager must not be null");
         final AssetLoader loader = Objects.requireNonNull(assetLoader, "assetLoader must not be null");
-        overlayTexture = loader.getTexture("white_pixel.png");
+        overlayTexture = loader.getTexture("images/white_pixel.png");
     }
 
     /**
@@ -68,7 +68,7 @@ public class VisualFeedback {
         }
         switch (type) {
             case SUCCESS_PLACEMENT:
-                createSuccessFeedback(card);
+                createSuccessFeedback(card, position);
                 break;
             case INVALID_PLACEMENT:
                 createInvalidFeedback(card, position);
@@ -84,12 +84,12 @@ public class VisualFeedback {
         }
     }
 
-    private void createSuccessFeedback(final CardRenderer card) {
-        final FeedbackBinding expand = createScaleBinding(card, 1f, 1.2f, SUCCESS_PULSE_DURATION);
+    private void createSuccessFeedback(final CardRenderer card, final Vector2 snapTarget) {
+        final FeedbackBinding expand = createScaleBinding(card, 1f, 1.2f, SUCCESS_PULSE_DURATION, snapTarget);
         expand.animation.setType(AnimationType.PULSE);
         expand.animation.setOnComplete(() -> {
             expand.active = false;
-            final FeedbackBinding shrink = createScaleBinding(card, 1.2f, 1f, SUCCESS_PULSE_DURATION);
+            final FeedbackBinding shrink = createScaleBinding(card, 1.2f, 1f, SUCCESS_PULSE_DURATION, snapTarget);
             shrink.animation.setType(AnimationType.PULSE);
         });
         createOverlay(card, Color.GREEN, SUCCESS_GLOW_ALPHA, SUCCESS_PULSE_DURATION * 2f);
@@ -138,8 +138,13 @@ public class VisualFeedback {
 
     private FeedbackBinding createScaleBinding(final CardRenderer card, final float startScale, final float endScale,
             final float duration) {
+        return createScaleBinding(card, startScale, endScale, duration, null);
+    }
+
+    private FeedbackBinding createScaleBinding(final CardRenderer card, final float startScale, final float endScale,
+            final float duration, final Vector2 basePositionOverride) {
         final CardAnimation animation = new CardAnimation(startScale, endScale, duration, EasingFunctions::easeOutQuad);
-        final FeedbackBinding binding = createBinding(card, animation);
+        final FeedbackBinding binding = createBinding(card, animation, basePositionOverride);
         binding.animation.setType(AnimationType.PULSE);
         binding.applier = (renderer, feedbackBinding, value) -> {
             final Vector2 center = feedbackBinding.lockedToBasePosition

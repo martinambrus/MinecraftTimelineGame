@@ -56,7 +56,7 @@ public class CardDragSystem {
         this.visualFeedback = Objects.requireNonNull(visualFeedback, "visualFeedback must not be null");
         this.inputHandler = Objects.requireNonNull(inputHandler, "inputHandler must not be null");
         placementZones = zones == null ? Collections.emptyList() : zones;
-        outlineTexture = Objects.requireNonNull(loader, "loader must not be null").getTexture("white_pixel.png");
+        outlineTexture = Objects.requireNonNull(loader, "loader must not be null").getTexture("images/white_pixel.png");
     }
 
     /**
@@ -97,7 +97,7 @@ public class CardDragSystem {
         if (targetZone != null) {
             dropTarget.set(targetZone.getPosition());
             snapCardToPosition(card, dropTarget);
-            visualFeedback.displayFeedback(VisualFeedback.FeedbackType.SUCCESS_PLACEMENT, card, targetZone.getCenter());
+            visualFeedback.displayFeedback(VisualFeedback.FeedbackType.SUCCESS_PLACEMENT, card, dropTarget);
         } else {
             dropTarget.set(dragStartPosition);
             snapCardToPosition(card, dropTarget);

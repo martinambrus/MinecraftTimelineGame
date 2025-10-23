@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :core:test:*)",
+      "Read(//usr/**)",
+      "Bash(./gradlew.bat:*)",
+      "Bash(tee:*)",
+      "Bash(cmd.exe /c gradlew.bat :core:test --tests ViewportConfigTest --tests RenderingIntegrationTest)",
+      "Bash(cmd.exe /c \"type core\\build\\test-results\\test\\TEST-com.minecrafttimeline.core.rendering.ViewportConfigTest.xml\")",
+      "Bash(git log:*)",
+      "Bash(cmd.exe /c gradlew.bat :core:test --tests ViewportConfigTest.worldToScreenAndBackReturnsOriginalPoint)",
+      "Bash(cmd.exe /c \"type core\\build\\reports\\tests\\test\\classes\\com.minecrafttimeline.core.rendering.ViewportConfigTest.html\")",
+      "Bash(cmd.exe /c gradlew.bat :core:test --tests ViewportConfigTest.worldToScreenAndBackReturnsOriginalPoint --info)",
+      "Bash(cmd.exe /c \"type core\\build\\test-results\\test\\TEST-com.minecrafttimeline.integration.RenderingIntegrationTest.xml\")",
+      "Bash(cmd.exe:*)",
+      "Bash(timeout 30 cmd.exe /c gradlew.bat :core:test:*)",
+      "Bash(cat:*)",
+      "Read(//tmp/**)",
+      "Bash(timeout:*)",
+      "Bash(for card in classic_release alpha_release beta_1_0 release_1_0 release_1_2_1 horse_update bountiful_update combat_update world_of_color village_pillage buzzy_bees nether_update caves_cliffs_part2 wild_update trails_tales)",
+      "Bash(do convert -size 200x286 xc:lightblue -fill black -pointsize 20 -gravity center -annotate +0+0 \"$card//_/ \" \"$card.png\")",
+      "Bash(done)",
+      "Bash(python3:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
