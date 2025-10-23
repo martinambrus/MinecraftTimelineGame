@@ -142,10 +142,13 @@ public class VisualFeedback {
         final FeedbackBinding binding = createBinding(card, animation);
         binding.animation.setType(AnimationType.PULSE);
         binding.applier = (renderer, feedbackBinding, value) -> {
+            final Vector2 center = feedbackBinding.lockedToBasePosition
+                    ? feedbackBinding.staticCenter
+                    : renderer.getCenter();
+            final float centerX = center.x;
+            final float centerY = center.y;
             final float newWidth = feedbackBinding.baseWidth * value;
             final float newHeight = feedbackBinding.baseHeight * value;
-            final float centerX = feedbackBinding.baseCenterX;
-            final float centerY = feedbackBinding.baseCenterY;
             final float newX = centerX - (newWidth / 2f);
             final float newY = centerY - (newHeight / 2f);
             renderer.setSize(newWidth, newHeight);
@@ -171,8 +174,17 @@ public class VisualFeedback {
     }
 
     private void restoreSize(final FeedbackBinding binding) {
+        final Vector2 currentCenter = binding.lockedToBasePosition
+                ? null
+                : binding.card.getCenter().cpy();
         binding.card.setSize(binding.baseWidth, binding.baseHeight);
-        binding.card.setPosition(binding.baseX, binding.baseY);
+        if (binding.lockedToBasePosition) {
+            binding.card.setPosition(binding.baseX, binding.baseY);
+        } else if (currentCenter != null) {
+            final float newX = currentCenter.x - (binding.baseWidth / 2f);
+            final float newY = currentCenter.y - (binding.baseHeight / 2f);
+            binding.card.setPosition(newX, newY);
+        }
     }
 
     private void rendererRestorePosition(final FeedbackBinding binding) {
@@ -257,8 +269,8 @@ public class VisualFeedback {
         final float baseY;
         final float baseWidth;
         final float baseHeight;
-        final float baseCenterX;
-        final float baseCenterY;
+        final boolean lockedToBasePosition;
+        final Vector2 staticCenter = new Vector2();
         FeedbackApplier applier;
         boolean active = true;
 
@@ -268,14 +280,17 @@ public class VisualFeedback {
             if (basePositionOverride != null) {
                 baseX = basePositionOverride.x;
                 baseY = basePositionOverride.y;
+                lockedToBasePosition = true;
             } else {
                 baseX = card.getPosition().x;
                 baseY = card.getPosition().y;
+                lockedToBasePosition = false;
             }
             baseWidth = card.getSize().x;
             baseHeight = card.getSize().y;
-            baseCenterX = baseX + (baseWidth / 2f);
-            baseCenterY = baseY + (baseHeight / 2f);
+            if (lockedToBasePosition) {
+                staticCenter.set(baseX + (baseWidth / 2f), baseY + (baseHeight / 2f));
+            }
         }
     }
 
