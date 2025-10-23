@@ -67,7 +67,7 @@ public final class ScreenManager {
      * Displays the main menu screen.
      */
     public void showMainMenu() {
-        game.setScreen(getMainMenuScreen());
+        setScreen(getMainMenuScreen(), false);
     }
 
     /**
@@ -128,7 +128,7 @@ public final class ScreenManager {
      */
     public void showResults(final GameSession session) {
         currentSession = session;
-        game.setScreen(new ResultsScreen(game, session, this));
+        setScreen(new ResultsScreen(game, session, this), true);
     }
 
     /**
@@ -177,9 +177,9 @@ public final class ScreenManager {
         if (screenClass == MainMenuScreen.class) {
             showMainMenu();
         } else if (screenClass == SettingsScreen.class) {
-            game.setScreen(getSettingsScreen());
+            setScreen(getSettingsScreen(), false);
         } else if (screenClass == LobbyScreen.class) {
-            game.setScreen(getLobbyScreen());
+            setScreen(getLobbyScreen(), false);
         } else {
             throw new IllegalArgumentException("Unsupported screen class: " + screenClass.getName());
         }
@@ -187,7 +187,15 @@ public final class ScreenManager {
 
     private void showGameplay(final GameSession session) {
         currentSession = session;
-        game.setScreen(new GameplayScreen(game, session, this));
+        setScreen(new GameplayScreen(game, session, this), true);
+    }
+
+    private void setScreen(final Screen newScreen, final boolean disposePrevious) {
+        final Screen previousScreen = game.getScreen();
+        game.setScreen(newScreen);
+        if (disposePrevious && previousScreen != null && previousScreen != newScreen) {
+            previousScreen.dispose();
+        }
     }
 
     private GameSession createSession(final List<String> playerNames, final int cardsPerPlayer) {
