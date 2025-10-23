@@ -8,7 +8,10 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.minecrafttimeline.core.card.Card;
 import com.minecrafttimeline.core.input.InputHandler;
+import com.minecrafttimeline.core.rendering.AnimationManager;
+import com.minecrafttimeline.core.rendering.CardDragSystem;
 import com.minecrafttimeline.core.rendering.CardRenderer;
+import com.minecrafttimeline.core.rendering.VisualFeedback;
 import com.minecrafttimeline.core.rendering.ViewportConfig;
 import com.minecrafttimeline.core.util.AssetLoader;
 import java.util.ArrayList;
@@ -37,6 +40,9 @@ public class GameplayScreen implements Screen {
     private SpriteBatch spriteBatch;
     private InputHandler inputHandler;
     private BitmapFont fpsFont;
+    private AnimationManager animationManager;
+    private VisualFeedback visualFeedback;
+    private CardDragSystem cardDragSystem;
 
     private int fpsFrameCounter;
     private String fpsDisplay = "FPS: 0";
@@ -66,6 +72,16 @@ public class GameplayScreen implements Screen {
 
         inputHandler = new InputHandler(viewportConfig, combinedRenderers);
         Gdx.input.setInputProcessor(inputHandler);
+
+        animationManager = new AnimationManager();
+        visualFeedback = new VisualFeedback(animationManager, AssetLoader.getInstance());
+        cardDragSystem = new CardDragSystem(
+                animationManager,
+                visualFeedback,
+                inputHandler,
+                timelineRenderers,
+                AssetLoader.getInstance());
+        cardDragSystem.updateValidZones(timelineRenderers);
 
         viewportConfig.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -98,6 +114,9 @@ public class GameplayScreen implements Screen {
             handRenderers.add(renderer);
             xOffset += renderer.getSize().x + spacing;
         }
+        if (cardDragSystem != null) {
+            cardDragSystem.updateValidZones(timelineRenderers);
+        }
     }
 
     @Override
@@ -114,7 +133,21 @@ public class GameplayScreen implements Screen {
         viewportConfig.getViewport().apply();
         spriteBatch.setProjectionMatrix(viewportConfig.getCamera().combined);
 
+        if (animationManager != null) {
+            animationManager.update(delta);
+        }
+        if (cardDragSystem != null) {
+            cardDragSystem.update(delta);
+        }
+        if (visualFeedback != null) {
+            visualFeedback.update();
+        }
+
         spriteBatch.begin();
+        if (cardDragSystem != null) {
+            cardDragSystem.renderInvalidZones(spriteBatch);
+            cardDragSystem.renderValidZones(spriteBatch);
+        }
         // Draw timeline cards first so that the player's hand can render on top for clarity.
         for (CardRenderer renderer : timelineRenderers) {
             renderer.render(spriteBatch);
@@ -122,6 +155,9 @@ public class GameplayScreen implements Screen {
         // Hand cards render after timeline cards to ensure selection priority.
         for (CardRenderer renderer : handRenderers) {
             renderer.render(spriteBatch);
+        }
+        if (visualFeedback != null) {
+            visualFeedback.render(spriteBatch);
         }
         fpsFont.draw(spriteBatch, fpsDisplay, 20f, ViewportConfig.BASE_HEIGHT - 20f);
         spriteBatch.end();
@@ -156,6 +192,9 @@ public class GameplayScreen implements Screen {
         }
         if (fpsFont != null) {
             fpsFont.dispose();
+        }
+        if (animationManager != null) {
+            animationManager.clear();
         }
     }
 

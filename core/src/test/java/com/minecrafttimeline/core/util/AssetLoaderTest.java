@@ -62,11 +62,12 @@ class AssetLoaderTest {
 
     @Test
     void missingTextureReturnsPlaceholderWithoutCrashing() {
-        when(assetManager.isLoaded(MISSING_TEXTURE_PATH, Texture.class)).thenReturn(false);
+        when(assetManager.isLoaded(MISSING_TEXTURE_PATH, Texture.class)).thenReturn(false, false);
         doNothing().when(assetManager).load(MISSING_TEXTURE_PATH, Texture.class);
         doThrow(new GdxRuntimeException("missing"))
                 .when(assetManager)
                 .finishLoadingAsset(MISSING_TEXTURE_PATH);
+        when(assetManager.isLoaded(MISSING_TEXTURE_PATH)).thenReturn(false);
 
         final Texture result = assetLoader.getTexture(MISSING_TEXTURE_PATH);
         final Texture secondCall = assetLoader.getTexture(MISSING_TEXTURE_PATH);
