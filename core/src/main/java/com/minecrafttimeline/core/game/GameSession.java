@@ -175,11 +175,11 @@ public final class GameSession {
         this.cardsPerPlayer = cardsPerPlayer;
     }
 
-    GameState getGameState() {
+    public GameState getGameState() {
         return gameState;
     }
 
-    TurnManager getTurnManager() {
+    public TurnManager getTurnManager() {
         return turnManager;
     }
 
