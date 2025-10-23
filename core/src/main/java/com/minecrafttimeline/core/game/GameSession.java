@@ -54,8 +54,16 @@ public final class GameSession {
         final boolean result = turnManager.applyCardPlacement(card, position);
         final int afterSize = gameState.getTimeline().size();
         final boolean cardPlaced = afterSize > beforeSize;
-        if (cardPlaced && !gameState.isGameOver()) {
-            turnManager.nextTurn();
+        if (cardPlaced) {
+            if (gameState.isGameOver()) {
+                final int playerCount = gameState.getPlayers().size();
+                if (playerCount > 0) {
+                    final int nextIndex = (turnManager.getCurrentPlayerIndex() + 1) % playerCount;
+                    turnManager.setCurrentPlayerIndex(nextIndex);
+                }
+            } else {
+                turnManager.nextTurn();
+            }
         }
         return result;
     }
@@ -87,7 +95,18 @@ public final class GameSession {
      */
     public boolean redo() {
         ensureInitialised();
-        return turnManager.redo() != null;
+        final Move move = turnManager.redo();
+        if (move == null) {
+            return false;
+        }
+        if (gameState.isGameOver()) {
+            final int playerCount = gameState.getPlayers().size();
+            if (playerCount > 0) {
+                final int nextIndex = (turnManager.getCurrentPlayerIndex() + 1) % playerCount;
+                turnManager.setCurrentPlayerIndex(nextIndex);
+            }
+        }
+        return true;
     }
 
     /**
@@ -125,8 +144,6 @@ public final class GameSession {
         final GameState state = GameState.loadFromFile(filename);
         final TurnManager manager = new TurnManager(state.getPlayers());
         manager.setGameState(state);
-        manager.setCurrentPlayerIndex(state.getCurrentPlayerIndex());
-        manager.setPhase(state.getCurrentPhase());
         final GameSession session = new GameSession();
         session.gameState = state;
         session.turnManager = manager;

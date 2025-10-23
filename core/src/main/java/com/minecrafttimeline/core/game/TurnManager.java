@@ -43,6 +43,12 @@ public final class TurnManager {
      */
     public void setGameState(final GameState gameState) {
         this.gameState = Objects.requireNonNull(gameState, "gameState must not be null");
+        final int statePlayerIndex = gameState.getCurrentPlayerIndex();
+        if (statePlayerIndex < 0 || statePlayerIndex >= players.size()) {
+            throw new IllegalArgumentException("Current player index out of bounds: " + statePlayerIndex);
+        }
+        currentPlayerIndex = statePlayerIndex;
+        currentPhase = Objects.requireNonNull(gameState.getCurrentPhase(), "gameState phase must not be null");
         this.gameState.setCurrentPlayerIndex(currentPlayerIndex);
         this.gameState.setPhase(currentPhase);
     }
