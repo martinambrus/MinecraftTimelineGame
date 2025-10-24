@@ -97,7 +97,8 @@ public class GameplayScreen extends AbstractScreen {
                 visualFeedback,
                 inputManager,
                 timelineRenderers,
-                AssetLoader.getInstance());
+                AssetLoader.getInstance(),
+                gameSession);
         viewportConfig.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 

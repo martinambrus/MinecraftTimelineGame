@@ -31,7 +31,7 @@ public class InputHandler implements InputProcessor {
      */
     public InputHandler(final ViewportConfig viewportConfig, final List<CardRenderer> renderers) {
         this.viewportConfig = Objects.requireNonNull(viewportConfig, "viewportConfig must not be null");
-        cardRenderers = List.copyOf(Objects.requireNonNull(renderers, "renderers must not be null"));
+        cardRenderers = Objects.requireNonNull(renderers, "renderers must not be null");
     }
 
     @Override
@@ -68,6 +68,7 @@ public class InputHandler implements InputProcessor {
             return false;
         }
         dragging = false;
+        selectedCard = null;
         return true;
     }
 

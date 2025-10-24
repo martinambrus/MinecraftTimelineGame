@@ -30,6 +30,7 @@ public final class GameState {
     private final List<Player> players;
     private final List<Card> timeline;
     private final List<Card> hand;
+    private final List<Card> discardPile;
     private final List<Move> moveHistory;
     private long gameStartTime;
 
@@ -39,7 +40,7 @@ public final class GameState {
      * @param players list of players participating in the game; must not be {@code null}
      */
     public GameState(final List<Player> players) {
-        this(GamePhase.SETUP, 0, players, List.of(), List.of(), List.of(), System.currentTimeMillis());
+        this(GamePhase.SETUP, 0, players, List.of(), List.of(), List.of(), List.of(), System.currentTimeMillis());
     }
 
     private GameState(
@@ -48,6 +49,7 @@ public final class GameState {
             final List<Player> players,
             final List<Card> timeline,
             final List<Card> hand,
+            final List<Card> discardPile,
             final List<Move> moveHistory,
             final long gameStartTime) {
         this.currentPhase = Objects.requireNonNull(phase, "phase must not be null");
@@ -55,6 +57,7 @@ public final class GameState {
         this.players = new ArrayList<>(Objects.requireNonNull(players, "players must not be null"));
         this.timeline = new ArrayList<>(Objects.requireNonNull(timeline, "timeline must not be null"));
         this.hand = new ArrayList<>(Objects.requireNonNull(hand, "hand must not be null"));
+        this.discardPile = new ArrayList<>(Objects.requireNonNull(discardPile, "discardPile must not be null"));
         this.moveHistory = new ArrayList<>(Objects.requireNonNull(moveHistory, "moveHistory must not be null"));
         this.gameStartTime = gameStartTime;
         updateHandSnapshot();
@@ -103,6 +106,15 @@ public final class GameState {
      */
     public List<Card> getHand() {
         return List.copyOf(hand);
+    }
+
+    /**
+     * Returns a defensive copy of the discard pile.
+     *
+     * @return immutable list of discarded cards
+     */
+    public List<Card> getDiscardPile() {
+        return List.copyOf(discardPile);
     }
 
     /**
@@ -157,6 +169,15 @@ public final class GameState {
             throw new IllegalArgumentException("position out of bounds: " + position);
         }
         timeline.add(position, card);
+    }
+
+    /**
+     * Adds the provided card to the discard pile.
+     *
+     * @param card card to discard; must not be {@code null}
+     */
+    public void addCardToDiscardPile(final Card card) {
+        discardPile.add(Objects.requireNonNull(card, "card must not be null"));
     }
 
     /**
@@ -240,6 +261,13 @@ public final class GameState {
     }
 
     /**
+     * Synchronises the public hand snapshot with the current player's actual hand.
+     */
+    public void refreshHandSnapshot() {
+        updateHandSnapshot();
+    }
+
+    /**
      * Persists the current game state to the specified file using JSON encoding.
      *
      * @param filename destination file name; must not be {@code null}
@@ -254,6 +282,7 @@ public final class GameState {
         root.put("players", playersToJson());
         root.put("timeline", cardsToJsonArray(timeline));
         root.put("hand", cardsToJsonArray(hand));
+        root.put("discardPile", cardsToJsonArray(discardPile));
         root.put("moveHistory", movesToJsonArray());
         Files.writeString(Path.of(filename), root.toString(2), StandardCharsets.UTF_8);
     }
@@ -275,8 +304,11 @@ public final class GameState {
         final List<Player> players = playersFromJson(root.getJSONArray("players"));
         final List<Card> timeline = cardsFromJsonArray(root.getJSONArray("timeline"));
         final List<Card> hand = cardsFromJsonArray(root.getJSONArray("hand"));
+        final List<Card> discardPile = root.has("discardPile")
+                ? cardsFromJsonArray(root.getJSONArray("discardPile"))
+                : List.of();
         final List<Move> moveHistory = movesFromJsonArray(root.getJSONArray("moveHistory"));
-        return new GameState(phase, currentPlayerIndex, players, timeline, hand, moveHistory, gameStartTime);
+        return new GameState(phase, currentPlayerIndex, players, timeline, hand, discardPile, moveHistory, gameStartTime);
     }
 
     private JSONArray playersToJson() {

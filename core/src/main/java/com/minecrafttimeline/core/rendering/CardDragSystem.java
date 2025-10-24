@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.minecrafttimeline.core.game.GameSession;
 import com.minecrafttimeline.core.input.InputHandler;
 import com.minecrafttimeline.core.util.AssetLoader;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class CardDragSystem {
     private final VisualFeedback visualFeedback;
     private final InputHandler inputHandler;
     private final List<CardRenderer> placementZones;
+    private final GameSession gameSession;
     private final List<CardRenderer> validZones = new ArrayList<>();
     private final List<CardRenderer> invalidZones = new ArrayList<>();
     private final List<AnimationBinding> bindings = new ArrayList<>();
@@ -33,6 +35,7 @@ public class CardDragSystem {
     private final Vector2 smoothPosition = new Vector2();
     private final Vector2 dropTarget = new Vector2();
     private final Vector2 dragStartPosition = new Vector2();
+    private final Rectangle timelineBounds = new Rectangle();
 
     private boolean wasDragging;
     private CardRenderer draggingCard;
@@ -51,12 +54,14 @@ public class CardDragSystem {
             final VisualFeedback visualFeedback,
             final InputHandler inputHandler,
             final List<CardRenderer> zones,
-            final AssetLoader loader) {
+            final AssetLoader loader,
+            final GameSession gameSession) {
         this.animationManager = Objects.requireNonNull(animationManager, "animationManager must not be null");
         this.visualFeedback = Objects.requireNonNull(visualFeedback, "visualFeedback must not be null");
         this.inputHandler = Objects.requireNonNull(inputHandler, "inputHandler must not be null");
         placementZones = zones == null ? Collections.emptyList() : zones;
         outlineTexture = Objects.requireNonNull(loader, "loader must not be null").getTexture("images/white_pixel.png");
+        this.gameSession = gameSession;
     }
 
     /**
@@ -93,29 +98,91 @@ public class CardDragSystem {
     }
 
     private void handleDrop(final CardRenderer card) {
-        final CardRenderer targetZone = findValidZone(card);
-        if (targetZone != null) {
-            dropTarget.set(targetZone.getPosition());
-            snapCardToPosition(card, dropTarget);
-            visualFeedback.displayFeedback(VisualFeedback.FeedbackType.SUCCESS_PLACEMENT, card, dropTarget);
-        } else {
-            dropTarget.set(dragStartPosition);
-            snapCardToPosition(card, dropTarget);
+        final DropResult result = attemptPlacement(card);
+        if (result == DropResult.SUCCESS) {
+            visualFeedback.displayFeedback(VisualFeedback.FeedbackType.SUCCESS_PLACEMENT, card, card.getPosition());
+            return;
+        }
+        dropTarget.set(dragStartPosition);
+        snapCardToPosition(card, dropTarget);
+        if (result == DropResult.FAILURE || result == DropResult.IGNORED) {
             visualFeedback.displayFeedback(VisualFeedback.FeedbackType.INVALID_PLACEMENT, card, dragStartPosition);
         }
     }
 
-    private CardRenderer findValidZone(final CardRenderer card) {
+    private DropResult attemptPlacement(final CardRenderer card) {
+        if (gameSession == null || card == null) {
+            return DropResult.IGNORED;
+        }
+        final com.minecrafttimeline.core.card.Card modelCard = card.getCard();
+        if (!gameSession.getGameState().getHand().contains(modelCard)) {
+            return DropResult.IGNORED;
+        }
+        final int insertionIndex = calculateInsertionIndex(card);
+        if (insertionIndex < 0) {
+            return DropResult.IGNORED;
+        }
+        final boolean placed = gameSession.placeCard(modelCard, insertionIndex);
+        if (placed) {
+            card.setOpacity(0f);
+            return DropResult.SUCCESS;
+        }
+        return DropResult.FAILURE;
+    }
+
+    private int calculateInsertionIndex(final CardRenderer card) {
+        if (placementZones.isEmpty()) {
+            return 0;
+        }
+        final Rectangle combinedBounds = getTimelineBounds();
+        if (combinedBounds == null) {
+            return -1;
+        }
         final Rectangle cardBounds = card.getBounds();
         final float centerX = cardBounds.x + (cardBounds.width / 2f);
         final float centerY = cardBounds.y + (cardBounds.height / 2f);
-        for (int i = 0; i < validZones.size(); i++) {
-            final CardRenderer candidate = validZones.get(i);
-            if (candidate.getBounds().contains(centerX, centerY)) {
-                return candidate;
+        final float verticalMargin = combinedBounds.height * 0.75f;
+        if (centerY < combinedBounds.y - verticalMargin
+                || centerY > combinedBounds.y + combinedBounds.height + verticalMargin) {
+            return -1;
+        }
+        for (int i = 0; i < placementZones.size(); i++) {
+            final float timelineCenter = placementZones.get(i).getCenter().x;
+            if (centerX < timelineCenter) {
+                return i;
             }
         }
-        return null;
+        return placementZones.size();
+    }
+
+    private Rectangle getTimelineBounds() {
+        if (placementZones.isEmpty()) {
+            return null;
+        }
+        float minX = Float.MAX_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE;
+        float maxY = -Float.MAX_VALUE;
+        for (int i = 0; i < placementZones.size(); i++) {
+            final Rectangle bounds = placementZones.get(i).getBounds();
+            if (bounds.x < minX) {
+                minX = bounds.x;
+            }
+            if (bounds.y < minY) {
+                minY = bounds.y;
+            }
+            if (bounds.x + bounds.width > maxX) {
+                maxX = bounds.x + bounds.width;
+            }
+            if (bounds.y + bounds.height > maxY) {
+                maxY = bounds.y + bounds.height;
+            }
+        }
+        if (minX == Float.MAX_VALUE) {
+            return null;
+        }
+        timelineBounds.set(minX, minY, Math.max(0f, maxX - minX), Math.max(0f, maxY - minY));
+        return timelineBounds;
     }
 
     private void updateBindings() {
@@ -256,5 +323,11 @@ public class CardDragSystem {
             this.axis = axis;
             this.targetValue = targetValue;
         }
+    }
+
+    private enum DropResult {
+        SUCCESS,
+        FAILURE,
+        IGNORED
     }
 }
