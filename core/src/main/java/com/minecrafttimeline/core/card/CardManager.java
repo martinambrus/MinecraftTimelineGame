@@ -94,6 +94,15 @@ public final class CardManager {
     }
 
     /**
+     * Indicates whether the card database has been loaded.
+     *
+     * @return {@code true} if initialized, {@code false} otherwise
+     */
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+    /**
      * Retrieves a card by its identifier.
      *
      * @param id identifier of the card; must not be {@code null}

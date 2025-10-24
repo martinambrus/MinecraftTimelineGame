@@ -2,39 +2,32 @@ package com.minecrafttimeline;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.minecrafttimeline.core.card.Card;
-import com.minecrafttimeline.core.card.CardManager;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.minecrafttimeline.core.util.AssetLoader;
 import com.minecrafttimeline.core.util.Logger;
-import com.minecrafttimeline.screens.GameplayScreen;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import com.minecrafttimeline.screens.ScreenManagedGame;
+import com.minecrafttimeline.screens.ScreenManager;
+import com.minecrafttimeline.screens.SpriteBatchProvider;
 
 /**
  * Main libGDX game entry point for the Minecraft Timeline card game.
  */
-public class MinecraftTimelineGame extends Game {
+public class MinecraftTimelineGame extends Game implements SpriteBatchProvider, ScreenManagedGame {
 
     private static final int FPS_LOG_INTERVAL = 60;
     private int frameCounter;
+    private SpriteBatch spriteBatch;
+    private ScreenManager screenManager;
 
     /** {@inheritDoc} */
     @Override
     public void create() {
         Logger.info("Game started");
         AssetLoader.getInstance().initialize();
-        final CardManager cardManager = CardManager.getInstance();
-        cardManager.initialize(Gdx.files.internal("data/trivia.json"));
-
-        final List<Card> sortedCards = new ArrayList<>(cardManager.getAllCards());
-        sortedCards.sort(Comparator.comparing(Card::getDate));
-        final int timelineCount = Math.min(6, sortedCards.size());
-        final int handCount = Math.min(5, Math.max(0, sortedCards.size() - timelineCount));
-        final List<Card> timelineCards = new ArrayList<>(sortedCards.subList(0, timelineCount));
-        final List<Card> handCards = new ArrayList<>(sortedCards.subList(timelineCount, timelineCount + handCount));
-
-        setScreen(new GameplayScreen(handCards, timelineCards));
+        spriteBatch = new SpriteBatch();
+        screenManager = new ScreenManager(this);
+        screenManager.initialize();
+        screenManager.showMainMenu();
     }
 
     /** {@inheritDoc} */
@@ -59,5 +52,21 @@ public class MinecraftTimelineGame extends Game {
     public void dispose() {
         super.dispose();
         AssetLoader.getInstance().dispose();
+        if (screenManager != null) {
+            screenManager.dispose();
+        }
+        if (spriteBatch != null) {
+            spriteBatch.dispose();
+        }
+    }
+
+    @Override
+    public SpriteBatch getSharedSpriteBatch() {
+        return spriteBatch;
+    }
+
+    @Override
+    public ScreenManager getScreenManager() {
+        return screenManager;
     }
 }
