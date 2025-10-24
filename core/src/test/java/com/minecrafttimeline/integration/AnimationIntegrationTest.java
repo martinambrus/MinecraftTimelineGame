@@ -1,6 +1,7 @@
 package com.minecrafttimeline.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -10,6 +11,8 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.minecrafttimeline.core.card.Card;
+import com.minecrafttimeline.core.game.GameSession;
+import com.minecrafttimeline.core.game.GameState;
 import com.minecrafttimeline.core.input.InputHandler;
 import com.minecrafttimeline.core.rendering.AnimationManager;
 import com.minecrafttimeline.core.rendering.CardDragSystem;
@@ -68,7 +71,16 @@ class AnimationIntegrationTest {
         when(inputHandler.isCardDragging()).thenAnswer(invocation -> dragging.get());
         when(inputHandler.getSelectedCardPosition()).thenAnswer(invocation -> dragPosition);
 
-        final CardDragSystem dragSystem = new CardDragSystem(manager, feedback, inputHandler, timelineZones, assetLoader);
+        final GameSession gameSession = mock(GameSession.class);
+        final GameState gameState = mock(GameState.class);
+        final List<Card> handCards = new ArrayList<>();
+        handCards.add(handCardData);
+        when(gameState.getHand()).thenReturn(handCards);
+        when(gameSession.getGameState()).thenReturn(gameState);
+        when(gameSession.placeCard(eq(handCardData), anyInt())).thenReturn(true);
+
+        final CardDragSystem dragSystem =
+                new CardDragSystem(manager, feedback, inputHandler, timelineZones, assetLoader, gameSession);
         dragSystem.updateValidZones(timelineZones);
 
         final float delta = 1f / 60f;
