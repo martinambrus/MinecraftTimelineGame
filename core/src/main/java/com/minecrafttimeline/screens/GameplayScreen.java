@@ -54,6 +54,7 @@ public class GameplayScreen extends AbstractScreen {
     private String fpsDisplay = "FPS: 0";
     private int lastTimelineCount;
     private int lastHandCount;
+    private int lastHandVersion;
     private boolean resultsDisplayed;
 
     /**
@@ -97,7 +98,8 @@ public class GameplayScreen extends AbstractScreen {
                 visualFeedback,
                 inputManager,
                 timelineRenderers,
-                AssetLoader.getInstance());
+                AssetLoader.getInstance(),
+                gameSession);
         viewportConfig.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
@@ -106,9 +108,11 @@ public class GameplayScreen extends AbstractScreen {
         handRenderers.clear();
         final List<com.minecrafttimeline.core.card.Card> timelineCards = gameSession.getGameState().getTimeline();
         final List<com.minecrafttimeline.core.card.Card> handCards = gameSession.getGameState().getHand();
+        final int handVersion = gameSession.getGameState().getHandSnapshotVersion();
 
         lastTimelineCount = timelineCards.size();
         lastHandCount = handCards.size();
+        lastHandVersion = handVersion;
 
         final float worldWidth = ViewportConfig.BASE_WIDTH;
         final float worldHeight = ViewportConfig.BASE_HEIGHT;
@@ -168,7 +172,8 @@ public class GameplayScreen extends AbstractScreen {
 
         final int timelineSize = gameSession.getGameState().getTimeline().size();
         final int handSize = gameSession.getGameState().getHand().size();
-        if (timelineSize != lastTimelineCount || handSize != lastHandCount) {
+        final int handVersion = gameSession.getGameState().getHandSnapshotVersion();
+        if (timelineSize != lastTimelineCount || handSize != lastHandCount || handVersion != lastHandVersion) {
             refreshRenderers();
             combinedRenderers.clear();
             combinedRenderers.addAll(timelineRenderers);

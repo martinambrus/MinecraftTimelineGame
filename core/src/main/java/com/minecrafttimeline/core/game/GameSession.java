@@ -50,11 +50,16 @@ public final class GameSession {
     public boolean placeCard(final Card card, final int position) {
         Objects.requireNonNull(card, "card must not be null");
         ensureInitialised();
+        final Player currentPlayer = gameState.getCurrentPlayer();
         final int beforeSize = gameState.getTimeline().size();
         final boolean result = turnManager.applyCardPlacement(card, position);
         final int afterSize = gameState.getTimeline().size();
         final boolean cardPlaced = afterSize > beforeSize;
         if (cardPlaced) {
+            if (!result) {
+                // Card was placed but position was incorrect (within tolerance but not perfect)
+                handleIncorrectPlacement(currentPlayer, card);
+            }
             if (gameState.isGameOver()) {
                 final int playerCount = gameState.getPlayers().size();
                 if (playerCount > 0) {
@@ -64,8 +69,13 @@ public final class GameSession {
             } else {
                 turnManager.nextTurn();
             }
+            return result;
         }
-        return result;
+        // Validation failed - card not placed, stays in hand
+        if (!gameState.isGameOver()) {
+            turnManager.setPhase(GamePhase.PLAYER_TURN);
+        }
+        return false;
     }
 
     /**
@@ -204,5 +214,24 @@ public final class GameSession {
         if (gameState == null || turnManager == null) {
             throw new IllegalStateException("Game has not been started");
         }
+    }
+
+    private void handleIncorrectPlacement(final Player currentPlayer, final Card card) {
+        if (currentPlayer.removeCardFromHand(card)) {
+            gameState.addCardToDiscardPile(card);
+        }
+        drawReplacementCard(currentPlayer);
+        gameState.refreshHandSnapshot();
+    }
+
+    private void drawReplacementCard(final Player currentPlayer) {
+        if (deck == null || deck.isEmpty()) {
+            return;
+        }
+        final List<Card> replacement = deck.dealCards(1);
+        if (replacement.isEmpty()) {
+            return;
+        }
+        currentPlayer.addCardsToHand(replacement);
     }
 }
