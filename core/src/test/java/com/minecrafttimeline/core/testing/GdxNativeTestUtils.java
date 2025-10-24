@@ -9,7 +9,10 @@ import com.badlogic.gdx.utils.GdxNativesLoader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Utility helper to ensure libGDX native libraries are loaded once before tests execute.
@@ -45,21 +48,53 @@ public final class GdxNativeTestUtils {
             final GL20 mockGl = (GL20) Proxy.newProxyInstance(
                     GL20.class.getClassLoader(),
                     new Class<?>[]{GL20.class},
-                    new NoopInvocationHandler());
+                    new HeadlessGlInvocationHandler());
             Gdx.gl = mockGl;
             Gdx.gl20 = mockGl;
         }
     }
 
-    private static final class NoopInvocationHandler implements InvocationHandler {
+    private static final class HeadlessGlInvocationHandler implements InvocationHandler {
+
+        private final AtomicInteger idCounter = new AtomicInteger(1);
 
         @Override
         public Object invoke(final Object proxy, final Method method, final Object[] args) {
             final Class<?> returnType = method.getReturnType();
+            final String name = method.getName();
+
+            if ("glGetShaderiv".equals(name) && args != null && args.length >= 3) {
+                writeInt(args[2], GL20.GL_TRUE);
+                return null;
+            }
+            if ("glGetProgramiv".equals(name) && args != null && args.length >= 3) {
+                writeInt(args[2], GL20.GL_TRUE);
+                return null;
+            }
+            if ("glGetShaderInfoLog".equals(name) || "glGetProgramInfoLog".equals(name)) {
+                return "";
+            }
+            if ("glGetError".equals(name)) {
+                return GL20.GL_NO_ERROR;
+            }
+            if ("glCheckFramebufferStatus".equals(name)) {
+                return GL20.GL_FRAMEBUFFER_COMPLETE;
+            }
+            if ("glCreateProgram".equals(name) || "glCreateShader".equals(name)) {
+                return idCounter.getAndIncrement();
+            }
+            if (name != null && name.startsWith("glGen") && args != null && args.length > 0) {
+                fillBuffer(args[args.length - 1]);
+                return null;
+            }
+
             if (returnType.equals(Boolean.TYPE)) {
                 return Boolean.FALSE;
             }
             if (returnType.equals(Integer.TYPE)) {
+                if ("glGetUniformLocation".equals(name)) {
+                    return 0;
+                }
                 return 0;
             }
             if (returnType.equals(Long.TYPE)) {
@@ -81,6 +116,39 @@ public final class GdxNativeTestUtils {
                 return (char) 0;
             }
             return null;
+        }
+
+        private void fillBuffer(final Object buffer) {
+            if (buffer instanceof IntBuffer) {
+                final IntBuffer intBuffer = (IntBuffer) buffer;
+                final int limit = intBuffer.limit();
+                for (int i = 0; i < limit; i++) {
+                    intBuffer.put(i, idCounter.getAndIncrement());
+                }
+            } else if (buffer instanceof FloatBuffer) {
+                final FloatBuffer floatBuffer = (FloatBuffer) buffer;
+                final int limit = floatBuffer.limit();
+                for (int i = 0; i < limit; i++) {
+                    floatBuffer.put(i, 0f);
+                }
+            }
+        }
+
+        private void writeInt(final Object buffer, final int value) {
+            if (buffer instanceof IntBuffer) {
+                final IntBuffer intBuffer = (IntBuffer) buffer;
+                final int position = intBuffer.position();
+                if (position < intBuffer.limit()) {
+                    intBuffer.put(position, value);
+                } else if (intBuffer.limit() > 0) {
+                    intBuffer.put(0, value);
+                }
+            } else if (buffer instanceof int[]) {
+                final int[] array = (int[]) buffer;
+                if (array.length > 0) {
+                    array[0] = value;
+                }
+            }
         }
     }
 }
