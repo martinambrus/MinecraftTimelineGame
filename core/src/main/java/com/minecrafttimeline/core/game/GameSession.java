@@ -56,6 +56,10 @@ public final class GameSession {
         final int afterSize = gameState.getTimeline().size();
         final boolean cardPlaced = afterSize > beforeSize;
         if (cardPlaced) {
+            if (!result) {
+                // Card was placed but position was incorrect (within tolerance but not perfect)
+                handleIncorrectPlacement(currentPlayer, card);
+            }
             if (gameState.isGameOver()) {
                 final int playerCount = gameState.getPlayers().size();
                 if (playerCount > 0) {
@@ -65,9 +69,9 @@ public final class GameSession {
             } else {
                 turnManager.nextTurn();
             }
-            return true;
+            return result;
         }
-        handleIncorrectPlacement(currentPlayer, card);
+        // Validation failed - card not placed, stays in hand
         if (!gameState.isGameOver()) {
             turnManager.setPhase(GamePhase.PLAYER_TURN);
         }

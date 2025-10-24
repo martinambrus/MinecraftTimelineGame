@@ -20,7 +20,10 @@
       "Bash(for card in classic_release alpha_release beta_1_0 release_1_0 release_1_2_1 horse_update bountiful_update combat_update world_of_color village_pillage buzzy_bees nether_update caves_cliffs_part2 wild_update trails_tales)",
       "Bash(do convert -size 200x286 xc:lightblue -fill black -pointsize 20 -gravity center -annotate +0+0 \"$card//_/ \" \"$card.png\")",
       "Bash(done)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(findstr:*)",
+      "Bash(find:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

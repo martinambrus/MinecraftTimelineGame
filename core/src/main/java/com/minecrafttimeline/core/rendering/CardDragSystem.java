@@ -100,7 +100,14 @@ public class CardDragSystem {
     private void handleDrop(final CardRenderer card) {
         final DropResult result = attemptPlacement(card);
         if (result == DropResult.SUCCESS) {
-            visualFeedback.displayFeedback(VisualFeedback.FeedbackType.SUCCESS_PLACEMENT, card, card.getPosition());
+            final CardRenderer targetZone = findClosestZone(card);
+            if (targetZone != null) {
+                dropTarget.set(targetZone.getPosition());
+                snapCardToPosition(card, dropTarget);
+                visualFeedback.displayFeedback(VisualFeedback.FeedbackType.SUCCESS_PLACEMENT, card, dropTarget);
+            } else {
+                visualFeedback.displayFeedback(VisualFeedback.FeedbackType.SUCCESS_PLACEMENT, card, card.getPosition());
+            }
             return;
         }
         dropTarget.set(dragStartPosition);
@@ -153,6 +160,25 @@ public class CardDragSystem {
             }
         }
         return placementZones.size();
+    }
+
+    private CardRenderer findClosestZone(final CardRenderer card) {
+        if (placementZones.isEmpty() || card == null) {
+            return null;
+        }
+        CardRenderer closest = null;
+        float minDistance = Float.MAX_VALUE;
+        final Vector2 cardCenter = card.getCenter();
+        for (int i = 0; i < placementZones.size(); i++) {
+            final CardRenderer zone = placementZones.get(i);
+            final Vector2 zoneCenter = zone.getCenter();
+            final float distance = cardCenter.dst(zoneCenter);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closest = zone;
+            }
+        }
+        return closest;
     }
 
     private Rectangle getTimelineBounds() {
