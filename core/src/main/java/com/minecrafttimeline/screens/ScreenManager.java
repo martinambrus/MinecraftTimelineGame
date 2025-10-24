@@ -2,6 +2,7 @@ package com.minecrafttimeline.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.minecrafttimeline.MinecraftTimelineGame;
 import com.minecrafttimeline.core.card.Card;
 import com.minecrafttimeline.core.card.CardDeck;
 import com.minecrafttimeline.core.card.CardManager;
