@@ -95,6 +95,10 @@ public final class GdxNativeTestUtils {
             if ("glCreateProgram".equals(name) || "glCreateShader".equals(name)) {
                 return idCounter.getAndIncrement();
             }
+            if ("glGenBuffer".equals(name) || "glGenTexture".equals(name)
+                    || "glGenFramebuffer".equals(name) || "glGenRenderbuffer".equals(name)) {
+                return idCounter.getAndIncrement();
+            }
             if (name != null && name.startsWith("glGen") && args != null && args.length > 0) {
                 fillBuffer(args[args.length - 1]);
                 return null;
