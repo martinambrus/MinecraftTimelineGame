@@ -3,6 +3,7 @@ package com.minecrafttimeline.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.Input;
 import com.minecrafttimeline.MinecraftTimelineGame;
 import com.minecrafttimeline.core.game.GameSession;
 import com.minecrafttimeline.core.input.InputHandler;
@@ -126,6 +127,11 @@ public class GameplayScreen extends AbstractScreen {
         final float cardHeight = Math.max(100f, candidateHeight);
         final float cardWidth = cardHeight * CARD_ASPECT_RATIO;
 
+        Gdx.app.log("GameplayScreen", String.format(
+                "refreshRenderers: timeline=%d hand=%d cardSize=(%.1fx%.1f) handAreaY=%.1f timelineY=%.1f",
+                timelineCards.size(), handCards.size(), cardWidth, cardHeight,
+                timelineAreaHeight + (handAreaHeight / 2f) - (cardHeight / 2f), spacing));
+
         float xOffset = spacing;
         final float yTimeline = spacing;
         for (final com.minecrafttimeline.core.card.Card card : timelineCards) {
@@ -138,6 +144,9 @@ public class GameplayScreen extends AbstractScreen {
         xOffset = spacing;
         for (final com.minecrafttimeline.core.card.Card card : handCards) {
             final CardRenderer renderer = new CardRenderer(card, xOffset, yHand, cardWidth, cardHeight);
+            Gdx.app.log("GameplayScreen", String.format(
+                    "  Hand card '%s' at (%.1f, %.1f) size (%.1fx%.1f)",
+                    card.getTitle(), xOffset, yHand, cardWidth, cardHeight));
             handRenderers.add(renderer);
             xOffset += renderer.getSize().x + spacing;
         }
@@ -149,7 +158,21 @@ public class GameplayScreen extends AbstractScreen {
 
     @Override
     protected void handleInput() {
-        // Gameplay input is handled by {@link InputHandler}; no additional polling required.
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
+            CardRenderer.setDebugEnabled(!CardRenderer.isDebugEnabled());
+            Gdx.app.log("GameplayScreen", "Card debug overlays "
+                    + (CardRenderer.isDebugEnabled() ? "enabled" : "disabled"));
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F4)) {
+            final com.badlogic.gdx.math.Vector3 cursor = getWorldCursorPosition();
+            Gdx.app.log("GameplayScreen", String.format("Cursor world position: (%.2f, %.2f)", cursor.x, cursor.y));
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F5) && inputManager != null) {
+            inputManager.toggleDebugLogging();
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F6)) {
+            viewportConfig.setDebugLogging(!viewportConfig.isDebugLoggingEnabled());
+        }
     }
 
     @Override

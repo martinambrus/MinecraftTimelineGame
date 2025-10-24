@@ -35,40 +35,42 @@ class GamePlayIntegrationTest {
 
     @Test
     void fullGamePlaythrough() {
-        assertThat(session.getGameState().getTimeline()).isEmpty();
+        assertThat(session.getGameState().getTimeline()).hasSize(1);
+        final Card baseCard = session.getGameState().getTimeline().get(0);
         final Card firstPlay = players.get(0).getHand().get(0);
         assertThat(session.placeCard(firstPlay, 0)).isTrue();
-        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay);
+        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay, baseCard);
 
         final Card secondPlayerCard = players.get(1).getHand().get(0);
         assertThat(session.placeCard(secondPlayerCard, 0)).isFalse();
-        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay);
+        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay, baseCard);
         assertThat(session.getTurnManager().getCurrentPlayer()).isEqualTo(players.get(1));
 
         assertThat(session.placeCard(secondPlayerCard, 1)).isTrue();
-        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay, secondPlayerCard);
+        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay, secondPlayerCard, baseCard);
 
         final Card secondCardFirstPlayer = players.get(0).getHand().get(0);
         assertThat(session.placeCard(secondCardFirstPlayer, 1)).isTrue();
-        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay, secondCardFirstPlayer, secondPlayerCard);
+        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay, secondCardFirstPlayer, secondPlayerCard, baseCard);
 
         final Card finalCard = players.get(1).getHand().get(0);
         assertThat(session.placeCard(finalCard, 3)).isTrue();
+        assertThat(session.getGameState().getTimeline()).containsExactly(firstPlay, secondCardFirstPlayer, secondPlayerCard, finalCard, baseCard);
         assertThat(session.isGameOver()).isTrue();
         assertThat(session.getCurrentPhase()).isEqualTo(GamePhase.GAME_OVER);
         assertThat(session.getWinner()).isNull();
 
         final String status = session.getGameStatus();
         assertThat(status).contains("Phase: GAME_OVER");
-        assertThat(status).contains("Timeline Cards: 4");
+        assertThat(status).contains("Timeline Cards: 5");
 
         assertThat(session.undo()).isTrue();
         assertThat(session.isGameOver()).isFalse();
-        assertThat(session.getGameState().getTimeline()).hasSize(3);
+        assertThat(session.getGameState().getTimeline()).hasSize(4);
 
         assertThat(session.redo()).isTrue();
         assertThat(session.isGameOver()).isTrue();
-        assertThat(session.getGameState().getTimeline()).hasSize(4);
+        assertThat(session.getGameState().getTimeline()).hasSize(5);
         assertThat(session.getCurrentPhase()).isEqualTo(GamePhase.GAME_OVER);
     }
 

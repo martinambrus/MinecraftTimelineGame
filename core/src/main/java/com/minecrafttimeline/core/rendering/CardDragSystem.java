@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.minecrafttimeline.core.game.GameRules;
 import com.minecrafttimeline.core.game.GameSession;
 import com.minecrafttimeline.core.input.InputHandler;
 import com.minecrafttimeline.core.util.AssetLoader;
@@ -138,6 +139,13 @@ public class CardDragSystem {
     }
 
     private int calculateInsertionIndex(final CardRenderer card) {
+        if (card == null) {
+            return -1;
+        }
+        final int autoIndex = calculateIndexFromValidPositions(card);
+        if (autoIndex >= 0) {
+            return autoIndex;
+        }
         if (placementZones.isEmpty()) {
             return 0;
         }
@@ -179,6 +187,51 @@ public class CardDragSystem {
             }
         }
         return closest;
+    }
+
+    private int calculateIndexFromValidPositions(final CardRenderer card) {
+        if (gameSession == null || placementZones == null) {
+            return -1;
+        }
+        final com.minecrafttimeline.core.card.Card modelCard = card.getCard();
+        if (modelCard == null) {
+            return -1;
+        }
+        final List<Integer> validPositions =
+                GameRules.getValidPositionsForCard(modelCard, gameSession.getGameState().getTimeline());
+        if (validPositions.isEmpty()) {
+            return -1;
+        }
+        final Rectangle cardBounds = card.getBounds();
+        final float centerX = cardBounds.x + (cardBounds.width / 2f);
+        int bestIndex = validPositions.get(0);
+        float bestDistance = Math.abs(centerX - anchorForIndex(bestIndex));
+        for (int i = 1; i < validPositions.size(); i++) {
+            final int candidate = validPositions.get(i);
+            final float distance = Math.abs(centerX - anchorForIndex(candidate));
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestIndex = candidate;
+            }
+        }
+        return bestIndex;
+    }
+
+    private float anchorForIndex(final int index) {
+        if (placementZones.isEmpty()) {
+            return 0f;
+        }
+        if (index <= 0) {
+            final CardRenderer first = placementZones.get(0);
+            return first.getPosition().x - (first.getSize().x / 2f);
+        }
+        if (index >= placementZones.size()) {
+            final CardRenderer last = placementZones.get(placementZones.size() - 1);
+            return last.getPosition().x + (last.getSize().x / 2f);
+        }
+        final CardRenderer left = placementZones.get(index - 1);
+        final CardRenderer right = placementZones.get(index);
+        return (left.getCenter().x + right.getCenter().x) / 2f;
     }
 
     private Rectangle getTimelineBounds() {

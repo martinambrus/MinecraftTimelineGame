@@ -37,6 +37,7 @@ class GameSessionTest {
         assertThat(session.getCurrentPhase()).isEqualTo(GamePhase.PLAYER_TURN);
         assertThat(players.get(0).getHand()).hasSize(1);
         assertThat(players.get(1).getHand()).hasSize(1);
+        assertThat(session.getGameState().getTimeline()).hasSize(1);
     }
 
     @Test
@@ -55,7 +56,7 @@ class GameSessionTest {
         final boolean result = session.placeCard(card, 5);
         assertThat(result).isFalse();
         assertThat(session.getTurnManager().getCurrentPlayer()).isEqualTo(players.get(0));
-        assertThat(session.getGameState().getTimeline()).isEmpty();
+        assertThat(session.getGameState().getTimeline()).hasSize(1);
     }
 
     @Test
@@ -63,10 +64,11 @@ class GameSessionTest {
         final Card card = players.get(0).getHand().get(0);
         session.placeCard(card, 0);
         assertThat(session.undo()).isTrue();
-        assertThat(session.getGameState().getTimeline()).isEmpty();
+        assertThat(session.getGameState().getTimeline()).hasSize(1);
         assertThat(players.get(0).getHand()).contains(card);
         assertThat(session.redo()).isTrue();
         assertThat(session.getGameState().getTimeline()).contains(card);
+        assertThat(session.getGameState().getTimeline()).hasSize(2);
     }
 
     @Test
@@ -84,7 +86,7 @@ class GameSessionTest {
         final String filename = "test-session.json";
         session.saveGame(filename);
         final GameSession loaded = GameSession.loadGame(filename);
-        assertThat(loaded.getGameState().getTimeline()).hasSize(1);
+        assertThat(loaded.getGameState().getTimeline()).hasSize(2);
         assertThat(loaded.getCurrentPhase()).isEqualTo(GamePhase.GAME_OVER);
         Files.deleteIfExists(Path.of(filename));
     }

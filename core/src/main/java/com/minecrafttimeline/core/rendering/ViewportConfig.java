@@ -1,5 +1,6 @@
 package com.minecrafttimeline.core.rendering;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -22,12 +23,15 @@ public class ViewportConfig {
     private final Vector2 reusableWorld = new Vector2();
     private final Vector2 reusableScreen = new Vector2();
     private int screenHeight = (int) BASE_HEIGHT;
+    private boolean debugLogging = false;
 
     /**
      * Creates a viewport configured with a 1280x720 orthographic camera.
+     * Uses Y-up coordinate system (Y=0 at bottom, Y=720 at top).
      */
     public ViewportConfig() {
         camera = new OrthographicCamera();
+        camera.setToOrtho(false, BASE_WIDTH, BASE_HEIGHT);
         viewport = new ExtendViewport(BASE_WIDTH, BASE_HEIGHT, camera);
     }
 
@@ -54,11 +58,23 @@ public class ViewportConfig {
         // LibGDX expects screen Y=0 at bottom, but standard screen coords have Y=0 at top
         final float libgdxScreenY = screenHeight - screenY;
 
+        if (debugLogging) {
+            Gdx.app.log("ViewportConfig", String.format(
+                    "screenToWorld: input=(%d,%d) screenHeight=%d flipped=(%.1f,%.1f)",
+                    screenX, screenY, screenHeight, (float)screenX, libgdxScreenY));
+        }
+
         tempVec3.set(screenX, libgdxScreenY, 0f);
         viewport.unproject(tempVec3);
 
-        // Negate unprojected Y to correct viewport's inverted Y-axis
-        out.set(tempVec3.x, -tempVec3.y);
+        if (debugLogging) {
+            Gdx.app.log("ViewportConfig", String.format(
+                    "  after unproject: (%.2f,%.2f)",
+                    tempVec3.x, tempVec3.y));
+        }
+
+        // Viewport unproject already handles the coordinate system correctly
+        out.set(tempVec3.x, tempVec3.y);
         return out;
     }
 
@@ -107,5 +123,24 @@ public class ViewportConfig {
      */
     public Viewport getViewport() {
         return viewport;
+    }
+
+    /**
+     * Enables or disables debug logging for coordinate transformations.
+     *
+     * @param enabled true to enable debug logging
+     */
+    public void setDebugLogging(final boolean enabled) {
+        debugLogging = enabled;
+        Gdx.app.log("ViewportConfig", "Debug logging " + (debugLogging ? "enabled" : "disabled"));
+    }
+
+    /**
+     * Checks if debug logging is currently enabled.
+     *
+     * @return true if debug logging is enabled
+     */
+    public boolean isDebugLoggingEnabled() {
+        return debugLogging;
     }
 }

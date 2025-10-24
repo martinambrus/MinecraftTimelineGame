@@ -1,5 +1,6 @@
 package com.minecrafttimeline.core.input;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import com.minecrafttimeline.core.rendering.CardRenderer;
@@ -22,6 +23,7 @@ public class InputHandler implements InputProcessor {
 
     private CardRenderer selectedCard;
     private boolean dragging;
+    private boolean debugLogging;
 
     /**
      * Creates a new handler instance for the supplied viewport and renderers.
@@ -51,8 +53,42 @@ public class InputHandler implements InputProcessor {
 
     @Override
     public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
+        // Always log viewport state and screen dimensions on first click (only if Gdx is initialized)
+        if (!debugLogging && Gdx.graphics != null) {
+            Gdx.app.log("InputHandler", String.format(
+                    "Screen size: %dx%d, Viewport screen: %dx%d, World: %.0fx%.0f, Camera: (%.1f,%.1f,%.1f)",
+                    Gdx.graphics.getWidth(), Gdx.graphics.getHeight(),
+                    viewportConfig.getViewport().getScreenWidth(), viewportConfig.getViewport().getScreenHeight(),
+                    viewportConfig.getViewport().getWorldWidth(), viewportConfig.getViewport().getWorldHeight(),
+                    viewportConfig.getCamera().position.x, viewportConfig.getCamera().position.y, viewportConfig.getCamera().position.z));
+        }
+
         viewportConfig.screenToWorldCoordinates(screenX, screenY, worldTouch);
         selectedCard = findTopMostCard(worldTouch.x, worldTouch.y);
+
+        // Always log touch events for debugging (only if Gdx is initialized)
+        if (Gdx.app != null) {
+            Gdx.app.log("InputHandler", String.format(
+                    "touchDown screen=(%d,%d) world=(%.2f, %.2f) selected=%s cardCount=%d",
+                    screenX, screenY, worldTouch.x, worldTouch.y, selectedCard, cardRenderers.size()));
+
+            // Log all card bounds when nothing is selected to help debug
+            if (selectedCard == null && cardRenderers.size() > 0) {
+                Gdx.app.log("InputHandler", "=== Card Bounds Debug ===");
+                for (int i = 0; i < cardRenderers.size(); i++) {
+                    final CardRenderer r = cardRenderers.get(i);
+                    if (r != null) {
+                        final com.badlogic.gdx.math.Rectangle bounds = r.getBounds();
+                        Gdx.app.log("InputHandler", String.format(
+                                "  Card[%d]: bounds=(%.1f,%.1f,%.1fx%.1f) contains=(%.2f,%.2f)? %b",
+                                i, bounds.x, bounds.y, bounds.width, bounds.height,
+                                worldTouch.x, worldTouch.y,
+                                bounds.contains(worldTouch.x, worldTouch.y)));
+                    }
+                }
+            }
+        }
+
         if (selectedCard != null) {
             dragging = true;
             selectedCardPosition.set(selectedCard.getPosition());
@@ -68,6 +104,12 @@ public class InputHandler implements InputProcessor {
             return false;
         }
         dragging = false;
+        if (debugLogging) {
+            Gdx.app.log("InputHandler", String.format(
+                    "touchUp screen=(%d,%d) selected=%s position=(%.2f, %.2f)",
+                    screenX, screenY, selectedCard, selectedCard != null ? selectedCard.getPosition().x : 0f,
+                    selectedCard != null ? selectedCard.getPosition().y : 0f));
+        }
         return true;
     }
 
@@ -79,6 +121,12 @@ public class InputHandler implements InputProcessor {
         viewportConfig.screenToWorldCoordinates(screenX, screenY, worldTouch);
         selectedCardPosition.set(worldTouch).sub(dragOffset);
         selectedCard.setPosition(selectedCardPosition.x, selectedCardPosition.y);
+        if (debugLogging) {
+            Gdx.app.log("InputHandler", String.format(
+                    "touchDragged screen=(%d,%d) world=(%.2f, %.2f) cardPos=(%.2f, %.2f)",
+                    screenX, screenY, worldTouch.x, worldTouch.y,
+                    selectedCardPosition.x, selectedCardPosition.y));
+        }
         return true;
     }
 
@@ -141,5 +189,22 @@ public class InputHandler implements InputProcessor {
      */
     public List<CardRenderer> getCardRenderers() {
         return Collections.unmodifiableList(cardRenderers);
+    }
+
+    /**
+     * Toggles verbose logging of input events.
+     */
+    public void toggleDebugLogging() {
+        debugLogging = !debugLogging;
+        Gdx.app.log("InputHandler", "Debug logging " + (debugLogging ? "enabled" : "disabled"));
+    }
+
+    /**
+     * Indicates whether verbose logging is currently active.
+     *
+     * @return {@code true} when logging each touch event
+     */
+    public boolean isDebugLogging() {
+        return debugLogging;
     }
 }

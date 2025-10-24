@@ -218,6 +218,15 @@ public class CardRenderer {
         debugEnabled = enabled;
     }
 
+    /**
+     * Indicates whether debug rendering is currently enabled.
+     *
+     * @return {@code true} when debug rectangles are drawn
+     */
+    public static boolean isDebugEnabled() {
+        return debugEnabled;
+    }
+
     Card getCard() {
         return card;
     }

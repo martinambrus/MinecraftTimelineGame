@@ -19,6 +19,7 @@ import com.minecrafttimeline.core.testing.GdxNativeTestUtils;
 import com.minecrafttimeline.core.util.AssetLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -92,6 +93,98 @@ class RenderingIntegrationTest {
         final Vector2 world = viewportConfig.screenToWorldCoordinates((int) screen.x, (int) screen.y);
         assertThat(world.x).isCloseTo(target.getPosition().x + 10f, org.assertj.core.data.Offset.offset(0.1f));
         assertThat(world.y).isCloseTo(target.getPosition().y + 10f, org.assertj.core.data.Offset.offset(0.1f));
+    }
+
+    @Test
+    void cardsRemainSelectableAfterViewportResize() throws Exception {
+        final Path triviaPath = locateTrivia();
+        final CardManager cardManager = CardManager.getInstance();
+        cardManager.initialize(triviaPath.toString());
+        final List<Card> allCards = new ArrayList<>(cardManager.getAllCards());
+        allCards.sort(Comparator.comparing(Card::getDate));
+
+        final ViewportConfig viewportConfig = new ViewportConfig();
+        viewportConfig.update(1920, 1080);
+
+        final List<CardRenderer> renderers = new ArrayList<>();
+        float x = 40f;
+        for (Card card : allCards.subList(0, Math.min(4, allCards.size()))) {
+            renderers.add(new CardRenderer(card, x, 80f, 120f, 180f, assetLoader));
+            x += 140f;
+        }
+        assertThat(renderers).hasSizeGreaterThanOrEqualTo(2);
+
+        final InputHandler handler = new InputHandler(viewportConfig, renderers);
+        final CardRenderer target = renderers.get(2);
+        final Vector2 screen = viewportConfig.worldToScreenCoordinates(
+                target.getPosition().x + 35f,
+                target.getPosition().y + 75f);
+
+        handler.touchDown((int) screen.x, (int) screen.y, 0, 0);
+        assertThat(handler.getSelectedCard()).isSameAs(target);
+
+        final Vector2 world = viewportConfig.screenToWorldCoordinates((int) screen.x, (int) screen.y);
+        assertThat(world.x).isCloseTo(target.getPosition().x + 35f, org.assertj.core.data.Offset.offset(0.5f));
+        assertThat(world.y).isCloseTo(target.getPosition().y + 75f, org.assertj.core.data.Offset.offset(0.5f));
+    }
+
+    @Test
+    void cardsRemainSelectableWithAspectRatioChanges() throws Exception {
+        final Path triviaPath = locateTrivia();
+        final CardManager cardManager = CardManager.getInstance();
+        cardManager.initialize(triviaPath.toString());
+        final List<Card> allCards = new ArrayList<>(cardManager.getAllCards());
+        allCards.sort(Comparator.comparing(Card::getDate));
+
+        final ViewportConfig viewportConfig = new ViewportConfig();
+        viewportConfig.update(1600, 900);
+
+        final List<CardRenderer> renderers = new ArrayList<>();
+        float x = 40f;
+        for (Card card : allCards.subList(0, Math.min(3, allCards.size()))) {
+            renderers.add(new CardRenderer(card, x, 120f, 120f, 180f, assetLoader));
+            x += 160f;
+        }
+
+        final InputHandler handler = new InputHandler(viewportConfig, renderers);
+        final CardRenderer target = renderers.get(0);
+        final Vector2 screen = viewportConfig.worldToScreenCoordinates(
+                target.getPosition().x + 60f,
+                target.getPosition().y + 90f);
+
+        handler.touchDown((int) screen.x, (int) screen.y, 0, 0);
+        assertThat(handler.getSelectedCard()).isSameAs(target);
+
+        final Vector2 world = viewportConfig.screenToWorldCoordinates((int) screen.x, (int) screen.y);
+        assertThat(world.x).isCloseTo(target.getPosition().x + 60f, org.assertj.core.data.Offset.offset(0.5f));
+        assertThat(world.y).isCloseTo(target.getPosition().y + 90f, org.assertj.core.data.Offset.offset(0.5f));
+    }
+
+    @Test
+    void draggingCardUpdatesItsPositionInWorldSpace() throws Exception {
+        final ViewportConfig viewportConfig = new ViewportConfig();
+        viewportConfig.update(1280, 720);
+
+        final Card card = new Card(
+                "drag-test",
+                "Drag Test",
+                java.time.LocalDate.of(2010, 1, 1),
+                "Trivia",
+                "textures/test.png",
+                "1.0");
+        final CardRenderer renderer = new CardRenderer(card, 50f, 60f, 100f, 150f, assetLoader);
+        final List<CardRenderer> renderers = List.of(renderer);
+        final InputHandler handler = new InputHandler(viewportConfig, renderers);
+
+        final Vector2 start = viewportConfig.worldToScreenCoordinates(80f, 100f);
+        handler.touchDown((int) start.x, (int) start.y, 0, 0);
+
+        final Vector2 dragTarget = viewportConfig.worldToScreenCoordinates(280f, 260f);
+        handler.touchDragged((int) dragTarget.x, (int) dragTarget.y, 0);
+
+        assertThat(handler.isCardDragging()).isTrue();
+        assertThat(renderer.getPosition().x).isCloseTo(250f, org.assertj.core.data.Offset.offset(1.5f));
+        assertThat(renderer.getPosition().y).isCloseTo(220f, org.assertj.core.data.Offset.offset(1.5f));
     }
 
     private Path locateTrivia() {

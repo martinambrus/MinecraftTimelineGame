@@ -37,6 +37,7 @@ public final class GameSession {
         this.turnManager = new TurnManager(players);
         this.turnManager.setGameState(gameState);
         this.turnManager.dealInitialCards(deck, cardsPerPlayer);
+        seedInitialTimelineCard();
         this.turnManager.setPhase(GamePhase.PLAYER_TURN);
     }
 
@@ -233,5 +234,17 @@ public final class GameSession {
             return;
         }
         currentPlayer.addCardsToHand(replacement);
+    }
+
+    private void seedInitialTimelineCard() {
+        if (deck == null || deck.isEmpty()) {
+            return;
+        }
+        final List<Card> initial = deck.dealCards(1);
+        if (initial.isEmpty()) {
+            return;
+        }
+        final Card startingCard = initial.get(0);
+        gameState.addCardToTimeline(startingCard, gameState.getTimeline().size());
     }
 }

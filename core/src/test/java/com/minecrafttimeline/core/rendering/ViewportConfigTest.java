@@ -29,7 +29,10 @@ class ViewportConfigTest {
     @Test
     void worldToScreenAndBackReturnsOriginalPoint() {
         final Vector2 screen = viewportConfig.worldToScreenCoordinates(400f, 300f);
-        final Vector2 world = viewportConfig.screenToWorldCoordinates((int) screen.x, (int) screen.y);
+        System.out.println("screen coords: " + screen);
+        final Vector2 world = viewportConfig.screenToWorldCoordinates(Math.round(screen.x), Math.round(screen.y));
+        System.out.println("world coords: " + world);
+        System.out.println("camera position: " + viewportConfig.getCamera().position);
         assertThat(world.x).isCloseTo(400f, org.assertj.core.data.Offset.offset(0.1f));
         assertThat(world.y).isCloseTo(300f, org.assertj.core.data.Offset.offset(0.1f));
     }
@@ -52,4 +55,5 @@ class ViewportConfigTest {
         assertThat(bottomLeftWorld.x).isCloseTo(0f, org.assertj.core.data.Offset.offset(0.1f));
         assertThat(bottomLeftWorld.y).isCloseTo(0f, org.assertj.core.data.Offset.offset(0.1f));
     }
+
 }
