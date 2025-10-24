@@ -33,6 +33,7 @@ public final class GameState {
     private final List<Card> discardPile;
     private final List<Move> moveHistory;
     private long gameStartTime;
+    private int handSnapshotVersion;
 
     /**
      * Creates a new state container initialised with the provided players.
@@ -60,6 +61,7 @@ public final class GameState {
         this.discardPile = new ArrayList<>(Objects.requireNonNull(discardPile, "discardPile must not be null"));
         this.moveHistory = new ArrayList<>(Objects.requireNonNull(moveHistory, "moveHistory must not be null"));
         this.gameStartTime = gameStartTime;
+        this.handSnapshotVersion = 0;
         updateHandSnapshot();
     }
 
@@ -106,6 +108,15 @@ public final class GameState {
      */
     public List<Card> getHand() {
         return List.copyOf(hand);
+    }
+
+    /**
+     * Returns a monotonically increasing version number that changes whenever the visible hand snapshot is updated.
+     *
+     * @return current hand snapshot version
+     */
+    public int getHandSnapshotVersion() {
+        return handSnapshotVersion;
     }
 
     /**
@@ -396,10 +407,16 @@ public final class GameState {
     }
 
     private void updateHandSnapshot() {
-        hand.clear();
+        final List<Card> updatedHand = new ArrayList<>();
         if (!players.isEmpty()) {
             final Player current = players.get(Math.min(Math.max(currentPlayerIndex, 0), players.size() - 1));
-            hand.addAll(current.getHand());
+            updatedHand.addAll(current.getHand());
         }
+        if (hand.equals(updatedHand)) {
+            return;
+        }
+        hand.clear();
+        hand.addAll(updatedHand);
+        handSnapshotVersion++;
     }
 }
