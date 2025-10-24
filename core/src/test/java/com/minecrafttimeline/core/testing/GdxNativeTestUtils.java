@@ -5,8 +5,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.backends.headless.mock.graphics.MockGL20;
 import com.badlogic.gdx.utils.GdxNativesLoader;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -40,9 +42,45 @@ public final class GdxNativeTestUtils {
         if (HEADLESS_INITIALIZED.compareAndSet(false, true)) {
             final HeadlessApplicationConfiguration configuration = new HeadlessApplicationConfiguration();
             headlessApplication = new HeadlessApplication(new ApplicationAdapter() {}, configuration);
-            final GL20 mockGl = new MockGL20();
+            final GL20 mockGl = (GL20) Proxy.newProxyInstance(
+                    GL20.class.getClassLoader(),
+                    new Class<?>[]{GL20.class},
+                    new NoopInvocationHandler());
             Gdx.gl = mockGl;
             Gdx.gl20 = mockGl;
+        }
+    }
+
+    private static final class NoopInvocationHandler implements InvocationHandler {
+
+        @Override
+        public Object invoke(final Object proxy, final Method method, final Object[] args) {
+            final Class<?> returnType = method.getReturnType();
+            if (returnType.equals(Boolean.TYPE)) {
+                return Boolean.FALSE;
+            }
+            if (returnType.equals(Integer.TYPE)) {
+                return 0;
+            }
+            if (returnType.equals(Long.TYPE)) {
+                return 0L;
+            }
+            if (returnType.equals(Float.TYPE)) {
+                return 0f;
+            }
+            if (returnType.equals(Double.TYPE)) {
+                return 0d;
+            }
+            if (returnType.equals(Short.TYPE)) {
+                return (short) 0;
+            }
+            if (returnType.equals(Byte.TYPE)) {
+                return (byte) 0;
+            }
+            if (returnType.equals(Character.TYPE)) {
+                return (char) 0;
+            }
+            return null;
         }
     }
 }
