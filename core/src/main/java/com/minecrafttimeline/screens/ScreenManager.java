@@ -2,6 +2,7 @@ package com.minecrafttimeline.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.files.FileHandle;
 import com.minecrafttimeline.MinecraftTimelineGame;
 import com.minecrafttimeline.core.card.Card;
 import com.minecrafttimeline.core.card.CardDeck;
@@ -44,9 +45,60 @@ public final class ScreenManager {
     public void initialize() {
         final CardManager cardManager = CardManager.getInstance();
         if (!cardManager.isInitialized()) {
-            cardManager.initialize(Gdx.files.internal("data/trivia.json"));
+            if (!loadTriviaDatabase(cardManager)) {
+                throw new IllegalStateException("Unable to load trivia database from available resources.");
+            }
         }
         settings = GameSettings.load();
+    }
+
+    private boolean loadTriviaDatabase(final CardManager cardManager) {
+        if (Gdx.files == null) {
+            logTriviaLoadFailure("Gdx.files is not initialized; cannot load trivia database.", null);
+            return false;
+        }
+
+        final FileHandle primaryHandle = Gdx.files.internal("data/trivia.json");
+        if (tryLoadTrivia(cardManager, primaryHandle, "data/trivia.json (internal)")) {
+            return true;
+        }
+
+        final FileHandle sampleHandle = Gdx.files.classpath("data/sample-trivia.json");
+        return tryLoadTrivia(cardManager, sampleHandle, "data/sample-trivia.json (classpath)");
+    }
+
+    private boolean tryLoadTrivia(final CardManager cardManager, final FileHandle handle,
+                                  final String sourceDescription) {
+        if (handle == null) {
+            return false;
+        }
+        if (!handle.exists()) {
+            logTriviaLoadFailure("Trivia database not found: " + sourceDescription, null);
+            return false;
+        }
+        try {
+            cardManager.initialize(handle);
+            return true;
+        } catch (IllegalArgumentException exception) {
+            logTriviaLoadFailure("Failed to load trivia database: " + sourceDescription, exception);
+            return false;
+        }
+    }
+
+    private void logTriviaLoadFailure(final String message, final Throwable exception) {
+        if (Gdx.app != null) {
+            if (exception != null) {
+                Gdx.app.error("ScreenManager", message, exception);
+            } else {
+                Gdx.app.error("ScreenManager", message);
+            }
+        } else {
+            if (exception != null) {
+                exception.printStackTrace();
+            } else {
+                System.err.println("ScreenManager: " + message);
+            }
+        }
     }
 
     /**
