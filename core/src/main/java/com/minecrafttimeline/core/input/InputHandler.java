@@ -68,7 +68,6 @@ public class InputHandler implements InputProcessor {
             return false;
         }
         dragging = false;
-        selectedCard = null;
         return true;
     }
 

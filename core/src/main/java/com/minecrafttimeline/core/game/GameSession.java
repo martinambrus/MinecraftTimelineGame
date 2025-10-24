@@ -37,7 +37,6 @@ public final class GameSession {
         this.turnManager = new TurnManager(players);
         this.turnManager.setGameState(gameState);
         this.turnManager.dealInitialCards(deck, cardsPerPlayer);
-        placeInitialTimelineCard();
         this.turnManager.setPhase(GamePhase.PLAYER_TURN);
     }
 
@@ -70,7 +69,7 @@ public final class GameSession {
         }
         handleIncorrectPlacement(currentPlayer, card);
         if (!gameState.isGameOver()) {
-            turnManager.nextTurn();
+            turnManager.setPhase(GamePhase.PLAYER_TURN);
         }
         return false;
     }
@@ -211,17 +210,6 @@ public final class GameSession {
         if (gameState == null || turnManager == null) {
             throw new IllegalStateException("Game has not been started");
         }
-    }
-
-    private void placeInitialTimelineCard() {
-        if (deck == null || deck.isEmpty()) {
-            return;
-        }
-        final List<Card> initialCards = deck.dealCards(1);
-        if (initialCards.isEmpty()) {
-            return;
-        }
-        gameState.addCardToTimeline(initialCards.get(0), 0);
     }
 
     private void handleIncorrectPlacement(final Player currentPlayer, final Card card) {
