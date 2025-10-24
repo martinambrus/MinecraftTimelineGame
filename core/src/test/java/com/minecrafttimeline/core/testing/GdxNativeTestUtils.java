@@ -64,11 +64,23 @@ public final class GdxNativeTestUtils {
             final String name = method.getName();
 
             if ("glGetShaderiv".equals(name) && args != null && args.length >= 3) {
-                writeInt(args[2], GL20.GL_TRUE);
+                final int pname = toInt(args[1]);
+                if (pname == GL20.GL_COMPILE_STATUS) {
+                    writeInt(args[2], GL20.GL_TRUE);
+                } else {
+                    writeInt(args[2], 0);
+                }
                 return null;
             }
             if ("glGetProgramiv".equals(name) && args != null && args.length >= 3) {
-                writeInt(args[2], GL20.GL_TRUE);
+                final int pname = toInt(args[1]);
+                if (pname == GL20.GL_LINK_STATUS) {
+                    writeInt(args[2], GL20.GL_TRUE);
+                } else if (pname == GL20.GL_ACTIVE_ATTRIBUTES || pname == GL20.GL_ACTIVE_UNIFORMS) {
+                    writeInt(args[2], 0);
+                } else {
+                    writeInt(args[2], 0);
+                }
                 return null;
             }
             if ("glGetShaderInfoLog".equals(name) || "glGetProgramInfoLog".equals(name)) {
@@ -116,6 +128,16 @@ public final class GdxNativeTestUtils {
                 return (char) 0;
             }
             return null;
+        }
+
+        private int toInt(final Object value) {
+            if (value instanceof Integer) {
+                return (Integer) value;
+            }
+            if (value instanceof Number) {
+                return ((Number) value).intValue();
+            }
+            return 0;
         }
 
         private void fillBuffer(final Object buffer) {
