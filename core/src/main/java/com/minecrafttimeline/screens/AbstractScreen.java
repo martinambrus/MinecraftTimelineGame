@@ -200,15 +200,17 @@ public abstract class AbstractScreen implements Screen {
             managedGame.getScreenManager().switchTo(screenClass);
             return;
         }
+        game.setScreen(instantiateScreen(screenClass));
+    }
+
+    private Screen instantiateScreen(final Class<? extends Screen> screenClass) {
         try {
-            final Screen screen;
             try {
-                screen = screenClass.getConstructor(Game.class).newInstance(game);
+                return screenClass.getConstructor(Game.class).newInstance(game);
             } catch (final NoSuchMethodException exception) {
                 // Fallback to zero-arg constructor if no Game-based constructor exists.
-                screen = screenClass.getConstructor().newInstance();
+                return screenClass.getConstructor().newInstance();
             }
-            game.setScreen(screen);
         } catch (final ReflectiveOperationException exception) {
             throw new IllegalStateException("Unable to instantiate screen: " + screenClass.getName(), exception);
         }

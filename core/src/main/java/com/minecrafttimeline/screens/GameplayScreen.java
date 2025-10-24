@@ -3,6 +3,7 @@ package com.minecrafttimeline.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.minecrafttimeline.MinecraftTimelineGame;
 import com.minecrafttimeline.core.game.GameSession;
 import com.minecrafttimeline.core.input.InputHandler;
 import com.minecrafttimeline.core.rendering.AnimationManager;
