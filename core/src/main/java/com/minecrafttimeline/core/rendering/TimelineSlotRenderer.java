@@ -35,7 +35,7 @@ public class TimelineSlotRenderer implements PlacementZone {
         this(x, y, width, height, AssetLoader.getInstance());
     }
 
-    TimelineSlotRenderer(
+    public TimelineSlotRenderer(
             final float x,
             final float y,
             final float width,
