@@ -26,17 +26,17 @@ public class CardDragSystem {
     private final AnimationManager animationManager;
     private final VisualFeedback visualFeedback;
     private final InputHandler inputHandler;
-    private final List<CardRenderer> placementZones;
+    private final List<? extends PlacementZone> placementZones;
     private final GameSession gameSession;
-    private final List<CardRenderer> validZones = new ArrayList<>();
-    private final List<CardRenderer> invalidZones = new ArrayList<>();
+    private final List<PlacementZone> validZones = new ArrayList<>();
+    private final List<PlacementZone> invalidZones = new ArrayList<>();
     private final List<AnimationBinding> bindings = new ArrayList<>();
+    private final List<PlacementZone> validZoneBuffer = new ArrayList<>();
     private final Texture outlineTexture;
 
     private final Vector2 smoothPosition = new Vector2();
     private final Vector2 dropTarget = new Vector2();
     private final Vector2 dragStartPosition = new Vector2();
-    private final Rectangle timelineBounds = new Rectangle();
 
     private boolean wasDragging;
     private CardRenderer draggingCard;
@@ -54,7 +54,7 @@ public class CardDragSystem {
             final AnimationManager animationManager,
             final VisualFeedback visualFeedback,
             final InputHandler inputHandler,
-            final List<CardRenderer> zones,
+            final List<? extends PlacementZone> zones,
             final AssetLoader loader,
             final GameSession gameSession) {
         this.animationManager = Objects.requireNonNull(animationManager, "animationManager must not be null");
@@ -77,9 +77,13 @@ public class CardDragSystem {
 
         if (dragging && selectedCard != null) {
             handleActiveDrag(delta, selectedCard);
-        } else if (wasDragging && draggingCard != null) {
-            handleDrop(draggingCard);
-            draggingCard = null;
+            recalculateZoneHighlights(selectedCard);
+        } else {
+            if (wasDragging && draggingCard != null) {
+                handleDrop(draggingCard);
+                draggingCard = null;
+            }
+            recalculateZoneHighlights(null);
         }
 
         wasDragging = dragging;
@@ -99,11 +103,13 @@ public class CardDragSystem {
     }
 
     private void handleDrop(final CardRenderer card) {
-        final DropResult result = attemptPlacement(card);
-        if (result == DropResult.SUCCESS) {
-            final CardRenderer targetZone = findClosestZone(card);
+        final PlacementEvaluation evaluation = attemptPlacement(card);
+        if (evaluation.result == DropResult.SUCCESS) {
+            final PlacementZone targetZone = evaluation.zone;
             if (targetZone != null) {
-                dropTarget.set(targetZone.getPosition());
+                final Vector2 zoneCenter = targetZone.getCenter();
+                final Vector2 cardSize = card.getSize();
+                dropTarget.set(zoneCenter.x - (cardSize.x / 2f), zoneCenter.y - (cardSize.y / 2f));
                 snapCardToPosition(card, dropTarget);
                 visualFeedback.displayFeedback(VisualFeedback.FeedbackType.SUCCESS_PLACEMENT, card, dropTarget);
             } else {
@@ -113,155 +119,60 @@ public class CardDragSystem {
         }
         dropTarget.set(dragStartPosition);
         snapCardToPosition(card, dropTarget);
-        if (result == DropResult.FAILURE || result == DropResult.IGNORED) {
+        if (evaluation.result == DropResult.FAILURE || evaluation.result == DropResult.IGNORED) {
             visualFeedback.displayFeedback(VisualFeedback.FeedbackType.INVALID_PLACEMENT, card, dragStartPosition);
         }
     }
 
-    private DropResult attemptPlacement(final CardRenderer card) {
+    private PlacementEvaluation attemptPlacement(final CardRenderer card) {
         if (gameSession == null || card == null) {
-            return DropResult.IGNORED;
+            return new PlacementEvaluation(DropResult.IGNORED, null);
         }
         final com.minecrafttimeline.core.card.Card modelCard = card.getCard();
         if (!gameSession.getGameState().getHand().contains(modelCard)) {
-            return DropResult.IGNORED;
+            return new PlacementEvaluation(DropResult.IGNORED, null);
         }
         final int insertionIndex = calculateInsertionIndex(card);
         if (insertionIndex < 0) {
-            return DropResult.IGNORED;
+            return new PlacementEvaluation(DropResult.IGNORED, null);
         }
+        final PlacementZone zone = insertionIndex < placementZones.size() ? placementZones.get(insertionIndex) : null;
         final boolean placed = gameSession.placeCard(modelCard, insertionIndex);
         if (placed) {
             card.setOpacity(0f);
-            return DropResult.SUCCESS;
+            return new PlacementEvaluation(DropResult.SUCCESS, zone);
         }
-        return DropResult.FAILURE;
+        return new PlacementEvaluation(DropResult.FAILURE, zone);
     }
 
     private int calculateInsertionIndex(final CardRenderer card) {
         if (card == null) {
             return -1;
         }
-        final int autoIndex = calculateIndexFromValidPositions(card);
-        if (autoIndex >= 0) {
-            return autoIndex;
-        }
-        if (placementZones.isEmpty()) {
-            return 0;
-        }
-        final Rectangle combinedBounds = getTimelineBounds();
-        if (combinedBounds == null) {
-            return -1;
-        }
-        final Rectangle cardBounds = card.getBounds();
-        final float centerX = cardBounds.x + (cardBounds.width / 2f);
-        final float centerY = cardBounds.y + (cardBounds.height / 2f);
-        final float verticalMargin = combinedBounds.height * 0.75f;
-        if (centerY < combinedBounds.y - verticalMargin
-                || centerY > combinedBounds.y + combinedBounds.height + verticalMargin) {
+        final PlacementZone zone = findZoneContainingCard(card);
+        if (zone == null) {
             return -1;
         }
         for (int i = 0; i < placementZones.size(); i++) {
-            final float timelineCenter = placementZones.get(i).getCenter().x;
-            if (centerX < timelineCenter) {
+            if (placementZones.get(i) == zone) {
                 return i;
             }
         }
-        return placementZones.size();
+        return -1;
     }
 
-    private CardRenderer findClosestZone(final CardRenderer card) {
-        if (placementZones.isEmpty() || card == null) {
+    private PlacementZone findZoneContainingCard(final CardRenderer card) {
+        if (card == null || placementZones.isEmpty()) {
             return null;
         }
-        CardRenderer closest = null;
-        float minDistance = Float.MAX_VALUE;
         final Vector2 cardCenter = card.getCenter();
         for (int i = 0; i < placementZones.size(); i++) {
-            final CardRenderer zone = placementZones.get(i);
-            final Vector2 zoneCenter = zone.getCenter();
-            final float distance = cardCenter.dst(zoneCenter);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closest = zone;
+            final PlacementZone zone = placementZones.get(i);
+            if (zone != null && zone.getBounds().contains(cardCenter)) {
+                return zone;
             }
         }
-        return closest;
-    }
-
-    private int calculateIndexFromValidPositions(final CardRenderer card) {
-        if (gameSession == null || placementZones == null) {
-            return -1;
-        }
-        final com.minecrafttimeline.core.card.Card modelCard = card.getCard();
-        if (modelCard == null) {
-            return -1;
-        }
-        final List<Integer> validPositions =
-                GameRules.getValidPositionsForCard(modelCard, gameSession.getGameState().getTimeline());
-        if (validPositions.isEmpty()) {
-            return -1;
-        }
-        final Rectangle cardBounds = card.getBounds();
-        final float centerX = cardBounds.x + (cardBounds.width / 2f);
-        int bestIndex = validPositions.get(0);
-        float bestDistance = Math.abs(centerX - anchorForIndex(bestIndex));
-        for (int i = 1; i < validPositions.size(); i++) {
-            final int candidate = validPositions.get(i);
-            final float distance = Math.abs(centerX - anchorForIndex(candidate));
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                bestIndex = candidate;
-            }
-        }
-        return bestIndex;
-    }
-
-    private float anchorForIndex(final int index) {
-        if (placementZones.isEmpty()) {
-            return 0f;
-        }
-        if (index <= 0) {
-            final CardRenderer first = placementZones.get(0);
-            return first.getPosition().x - (first.getSize().x / 2f);
-        }
-        if (index >= placementZones.size()) {
-            final CardRenderer last = placementZones.get(placementZones.size() - 1);
-            return last.getPosition().x + (last.getSize().x / 2f);
-        }
-        final CardRenderer left = placementZones.get(index - 1);
-        final CardRenderer right = placementZones.get(index);
-        return (left.getCenter().x + right.getCenter().x) / 2f;
-    }
-
-    private Rectangle getTimelineBounds() {
-        if (placementZones.isEmpty()) {
-            return null;
-        }
-        float minX = Float.MAX_VALUE;
-        float minY = Float.MAX_VALUE;
-        float maxX = -Float.MAX_VALUE;
-        float maxY = -Float.MAX_VALUE;
-        for (int i = 0; i < placementZones.size(); i++) {
-            final Rectangle bounds = placementZones.get(i).getBounds();
-            if (bounds.x < minX) {
-                minX = bounds.x;
-            }
-            if (bounds.y < minY) {
-                minY = bounds.y;
-            }
-            if (bounds.x + bounds.width > maxX) {
-                maxX = bounds.x + bounds.width;
-            }
-            if (bounds.y + bounds.height > maxY) {
-                maxY = bounds.y + bounds.height;
-            }
-        }
-        if (minX == Float.MAX_VALUE) {
-            return null;
-        }
-        timelineBounds.set(minX, minY, Math.max(0f, maxX - minX), Math.max(0f, maxY - minY));
-        return timelineBounds;
+        return null;
     }
 
     private void updateBindings() {
@@ -294,14 +205,15 @@ public class CardDragSystem {
      *
      * @param validPositions list of valid placement renderers; may be {@code null}
      */
-    public void updateValidZones(final List<CardRenderer> validPositions) {
+    public void updateValidZones(final List<? extends PlacementZone> validPositions) {
         validZones.clear();
-        if (validPositions != null) {
-            validZones.addAll(validPositions);
-        }
         invalidZones.clear();
+        if (validPositions == null) {
+            return;
+        }
+        validZones.addAll(validPositions);
         for (int i = 0; i < placementZones.size(); i++) {
-            final CardRenderer zone = placementZones.get(i);
+            final PlacementZone zone = placementZones.get(i);
             if (!validZones.contains(zone)) {
                 invalidZones.add(zone);
             }
@@ -326,7 +238,7 @@ public class CardDragSystem {
         renderZones(batch, invalidZones, 1f, 0f, 0f, 0.25f);
     }
 
-    private void renderZones(final SpriteBatch batch, final List<CardRenderer> zones, final float r, final float g,
+    private void renderZones(final SpriteBatch batch, final List<PlacementZone> zones, final float r, final float g,
             final float b, final float alpha) {
         if (batch == null) {
             return;
@@ -381,6 +293,39 @@ public class CardDragSystem {
         animationManager.addAnimation(yAnimation);
         bindings.add(xBinding);
         bindings.add(yBinding);
+    }
+
+    private void recalculateZoneHighlights(final CardRenderer selectedCard) {
+        if (selectedCard == null || gameSession == null) {
+            updateValidZones(null);
+            return;
+        }
+        final com.minecrafttimeline.core.card.Card modelCard = selectedCard.getCard();
+        if (modelCard == null) {
+            updateValidZones(null);
+            return;
+        }
+        final List<Integer> validPositions =
+                GameRules.getValidPositionsForCard(modelCard, gameSession.getGameState().getTimeline());
+        validZoneBuffer.clear();
+        for (int i = 0; i < validPositions.size(); i++) {
+            final int index = validPositions.get(i);
+            if (index >= 0 && index < placementZones.size()) {
+                validZoneBuffer.add(placementZones.get(index));
+            }
+        }
+        updateValidZones(validZoneBuffer);
+    }
+
+    private static final class PlacementEvaluation {
+
+        final DropResult result;
+        final PlacementZone zone;
+
+        PlacementEvaluation(final DropResult result, final PlacementZone zone) {
+            this.result = result;
+            this.zone = zone;
+        }
     }
 
     private enum Axis {

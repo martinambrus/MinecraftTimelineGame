@@ -17,6 +17,8 @@ import com.minecrafttimeline.core.input.InputHandler;
 import com.minecrafttimeline.core.rendering.AnimationManager;
 import com.minecrafttimeline.core.rendering.CardDragSystem;
 import com.minecrafttimeline.core.rendering.CardRenderer;
+import com.minecrafttimeline.core.rendering.PlacementZone;
+import com.minecrafttimeline.core.rendering.TimelineSlotRenderer;
 import com.minecrafttimeline.core.rendering.VisualFeedback;
 import com.minecrafttimeline.core.util.AssetLoader;
 import java.time.LocalDate;
@@ -54,18 +56,19 @@ class AnimationIntegrationTest {
     @Test
     void dragPlaceAndFeedbackSequenceCompletes() {
         final Card handCardData = createCard("hand");
-        final Card timelineCardData = createCard("timeline");
-        final CardRenderer targetZone = new CardRenderer(timelineCardData, 400f, 200f, 120f, 180f, assetLoader);
+        final TimelineSlotRenderer targetZone = new TimelineSlotRenderer(400f, 200f, 120f, 180f);
         final CardRenderer draggedCard = new CardRenderer(handCardData, 50f, 350f, 120f, 180f, assetLoader);
 
-        final List<CardRenderer> timelineZones = new ArrayList<>();
+        final List<TimelineSlotRenderer> timelineZones = new ArrayList<>();
         timelineZones.add(targetZone);
 
         final AnimationManager manager = new AnimationManager();
         final VisualFeedback feedback = new VisualFeedback(manager, assetLoader);
 
         final AtomicBoolean dragging = new AtomicBoolean(true);
-        final Vector2 dragPosition = new Vector2(targetZone.getPosition());
+        final Vector2 dragPosition = new Vector2(targetZone.getCenter()).sub(
+                draggedCard.getSize().x / 2f,
+                draggedCard.getSize().y / 2f);
         final InputHandler inputHandler = mock(InputHandler.class);
         when(inputHandler.getSelectedCard()).thenAnswer(invocation -> dragging.get() ? draggedCard : null);
         when(inputHandler.isCardDragging()).thenAnswer(invocation -> dragging.get());
@@ -108,8 +111,8 @@ class AnimationIntegrationTest {
         }
 
         assertThat(manager.hasAnimationsRunning()).isFalse();
-        assertThat(draggedCard.getPosition().x).isCloseTo(targetZone.getPosition().x, offset());
-        assertThat(draggedCard.getPosition().y).isCloseTo(targetZone.getPosition().y, offset());
+        assertThat(draggedCard.getCenter().x).isCloseTo(targetZone.getCenter().x, offset());
+        assertThat(draggedCard.getCenter().y).isCloseTo(targetZone.getCenter().y, offset());
     }
 
     private Card createCard(final String idSuffix) {
@@ -122,7 +125,7 @@ class AnimationIntegrationTest {
                 "1.0");
     }
 
-    private float distanceToZone(final CardRenderer card, final CardRenderer zone) {
+    private float distanceToZone(final CardRenderer card, final PlacementZone zone) {
         final Vector2 cardCenter = card.getCenter();
         final Vector2 zoneCenter = zone.getCenter();
         return cardCenter.dst(zoneCenter);

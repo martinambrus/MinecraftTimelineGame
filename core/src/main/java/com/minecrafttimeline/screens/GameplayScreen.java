@@ -10,6 +10,7 @@ import com.minecrafttimeline.core.input.InputHandler;
 import com.minecrafttimeline.core.rendering.AnimationManager;
 import com.minecrafttimeline.core.rendering.CardDragSystem;
 import com.minecrafttimeline.core.rendering.CardRenderer;
+import com.minecrafttimeline.core.rendering.TimelineSlotRenderer;
 import com.minecrafttimeline.core.rendering.ViewportConfig;
 import com.minecrafttimeline.core.rendering.VisualFeedback;
 import com.minecrafttimeline.core.util.AssetLoader;
@@ -37,13 +38,15 @@ public class GameplayScreen extends AbstractScreen {
     private static final int FPS_UPDATE_INTERVAL = 60;
     private static final float CARD_ASPECT_RATIO = 0.7f;
     private static final float HAND_AREA_HEIGHT_RATIO = 0.45f;
+    private static final float SLOT_WIDTH_RATIO = 0.6f;
+    private static final float SLOT_HEIGHT_RATIO = 0.7f;
 
     private final GameSession gameSession;
     private final ScreenManager screenManager;
     private final ViewportConfig viewportConfig = new ViewportConfig();
     private final List<CardRenderer> timelineRenderers = new ArrayList<>();
     private final List<CardRenderer> handRenderers = new ArrayList<>();
-    private final List<CardRenderer> combinedRenderers = new ArrayList<>();
+    private final List<TimelineSlotRenderer> timelineSlots = new ArrayList<>();
 
     private BitmapFont fpsFont;
     private AnimationManager animationManager;
@@ -88,25 +91,24 @@ public class GameplayScreen extends AbstractScreen {
         visualFeedback = new VisualFeedback(animationManager, AssetLoader.getInstance());
 
         refreshRenderers();
-        combinedRenderers.clear();
-        combinedRenderers.addAll(timelineRenderers);
-        combinedRenderers.addAll(handRenderers);
 
-        inputManager = new InputHandler(viewportConfig, combinedRenderers);
+        inputManager = new InputHandler(viewportConfig, handRenderers);
         Gdx.input.setInputProcessor(inputManager);
         cardDragSystem = new CardDragSystem(
                 animationManager,
                 visualFeedback,
                 inputManager,
-                timelineRenderers,
+                timelineSlots,
                 AssetLoader.getInstance(),
                 gameSession);
+        cardDragSystem.updateValidZones(null);
         viewportConfig.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     private void refreshRenderers() {
         timelineRenderers.clear();
         handRenderers.clear();
+        timelineSlots.clear();
         final List<com.minecrafttimeline.core.card.Card> timelineCards = gameSession.getGameState().getTimeline();
         final List<com.minecrafttimeline.core.card.Card> handCards = gameSession.getGameState().getHand();
         final int handVersion = gameSession.getGameState().getHandSnapshotVersion();
@@ -133,19 +135,18 @@ public class GameplayScreen extends AbstractScreen {
                 timelineAreaHeight + (handAreaHeight / 2f) - (cardHeight / 2f), spacing));
 
         final float yTimeline = spacing;
-        final float timelineWidth;
-        if (timelineCards.isEmpty()) {
-            timelineWidth = cardWidth;
-        } else {
-            timelineWidth = (timelineCards.size() * cardWidth)
-                    + ((Math.max(0, timelineCards.size() - 1)) * spacing);
-        }
+        final float timelineWidth = timelineCards.isEmpty()
+                ? cardWidth
+                : (timelineCards.size() * cardWidth)
+                        + ((Math.max(0, timelineCards.size() - 1)) * spacing);
         float xOffset = Math.max(spacing, (worldWidth - timelineWidth) / 2f);
         for (final com.minecrafttimeline.core.card.Card card : timelineCards) {
             final CardRenderer renderer = new CardRenderer(card, xOffset, yTimeline, cardWidth, cardHeight);
             timelineRenderers.add(renderer);
             xOffset += renderer.getSize().x + spacing;
         }
+
+        rebuildTimelineSlots(worldWidth, spacing, cardWidth, cardHeight, yTimeline);
 
         final float yHand = timelineAreaHeight + (handAreaHeight / 2f) - (cardHeight / 2f);
         xOffset = spacing;
@@ -159,7 +160,7 @@ public class GameplayScreen extends AbstractScreen {
         }
 
         if (cardDragSystem != null) {
-            cardDragSystem.updateValidZones(timelineRenderers);
+            cardDragSystem.updateValidZones(null);
         }
     }
 
@@ -205,9 +206,6 @@ public class GameplayScreen extends AbstractScreen {
         final int handVersion = gameSession.getGameState().getHandSnapshotVersion();
         if (timelineSize != lastTimelineCount || handSize != lastHandCount || handVersion != lastHandVersion) {
             refreshRenderers();
-            combinedRenderers.clear();
-            combinedRenderers.addAll(timelineRenderers);
-            combinedRenderers.addAll(handRenderers);
         }
 
         if (!resultsDisplayed && gameSession.isGameOver()) {
@@ -218,6 +216,9 @@ public class GameplayScreen extends AbstractScreen {
 
     @Override
     protected void renderScreen(final float delta) {
+        for (final TimelineSlotRenderer slot : timelineSlots) {
+            slot.render(batch);
+        }
         if (cardDragSystem != null) {
             cardDragSystem.renderInvalidZones(batch);
             cardDragSystem.renderValidZones(batch);
@@ -262,5 +263,57 @@ public class GameplayScreen extends AbstractScreen {
         if (hud != null) {
             hud.dispose();
         }
+    }
+
+    private void rebuildTimelineSlots(
+            final float worldWidth,
+            final float spacing,
+            final float cardWidth,
+            final float cardHeight,
+            final float yTimeline) {
+        final float slotHeight = cardHeight * SLOT_HEIGHT_RATIO;
+        final float slotYOffset = yTimeline + ((cardHeight - slotHeight) / 2f);
+        final float slotWidthBase = Math.max(12f, spacing * 0.9f);
+        final AssetLoader loader = AssetLoader.getInstance();
+
+        if (timelineRenderers.isEmpty()) {
+            final float emptySlotWidth = Math.max(cardWidth * SLOT_WIDTH_RATIO, slotWidthBase);
+            final float slotX = (worldWidth - emptySlotWidth) / 2f;
+            timelineSlots.add(new TimelineSlotRenderer(slotX, slotYOffset, emptySlotWidth, slotHeight, loader));
+            return;
+        }
+
+        final float slotWidth = slotWidthBase;
+        addSlotAt(centerWithinWorld(
+                timelineRenderers.get(0).getPosition().x - (spacing / 2f), slotWidth, worldWidth),
+                slotYOffset, slotWidth, slotHeight, loader);
+        for (int i = 0; i < timelineRenderers.size() - 1; i++) {
+            final CardRenderer left = timelineRenderers.get(i);
+            final CardRenderer right = timelineRenderers.get(i + 1);
+            final float leftEdge = left.getPosition().x + left.getSize().x;
+            final float rightEdge = right.getPosition().x;
+            final float center = (leftEdge + rightEdge) / 2f;
+            addSlotAt(centerWithinWorld(center, slotWidth, worldWidth), slotYOffset, slotWidth, slotHeight, loader);
+        }
+        final CardRenderer last = timelineRenderers.get(timelineRenderers.size() - 1);
+        final float lastCenter = last.getPosition().x + last.getSize().x + (spacing / 2f);
+        addSlotAt(centerWithinWorld(lastCenter, slotWidth, worldWidth), slotYOffset, slotWidth, slotHeight, loader);
+    }
+
+    private void addSlotAt(
+            final float centerX,
+            final float slotY,
+            final float slotWidth,
+            final float slotHeight,
+            final AssetLoader loader) {
+        final float slotX = centerX - (slotWidth / 2f);
+        timelineSlots.add(new TimelineSlotRenderer(slotX, slotY, slotWidth, slotHeight, loader));
+    }
+
+    private float centerWithinWorld(final float centerX, final float slotWidth, final float worldWidth) {
+        final float half = slotWidth / 2f;
+        final float min = half;
+        final float max = worldWidth - half;
+        return Math.max(min, Math.min(centerX, max));
     }
 }
