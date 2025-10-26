@@ -236,13 +236,18 @@ public class CardDragSystem {
      *
      * @param validPositions list of valid placement renderers; may be {@code null}
      */
-    public void updateValidZones(final List<? extends PlacementZone> validPositions) {
+    public void updateValidZones(final List<?> validPositions) {
         validZones.clear();
         invalidZones.clear();
         if (validPositions == null) {
             return;
         }
-        validZones.addAll(validPositions);
+        for (int i = 0; i < validPositions.size(); i++) {
+            final PlacementZone zone = findMatchingZone(validPositions.get(i));
+            if (zone != null) {
+                validZones.add(zone);
+            }
+        }
         for (int i = 0; i < placementZones.size(); i++) {
             final PlacementZone zone = placementZones.get(i);
             if (!validZones.contains(zone)) {
@@ -348,6 +353,24 @@ public class CardDragSystem {
         updateValidZones(validZoneBuffer);
     }
 
+    private PlacementZone findMatchingZone(final Object candidate) {
+        if (candidate instanceof PlacementZone) {
+            final PlacementZone zone = (PlacementZone) candidate;
+            return placementZones.contains(zone) ? zone : null;
+        }
+        if (candidate instanceof CardRenderer) {
+            final CardRenderer renderer = (CardRenderer) candidate;
+            for (int i = 0; i < placementZones.size(); i++) {
+                final PlacementZone zone = placementZones.get(i);
+                if (zone instanceof RendererPlacementZone
+                        && ((RendererPlacementZone) zone).matchesRenderer(renderer)) {
+                    return zone;
+                }
+            }
+        }
+        return null;
+    }
+
     private static final class PlacementEvaluation {
 
         final DropResult result;
@@ -406,6 +429,10 @@ public class CardDragSystem {
         @Override
         public Vector2 getSize() {
             return renderer.getSize();
+        }
+
+        boolean matchesRenderer(final CardRenderer other) {
+            return renderer == other;
         }
     }
 
