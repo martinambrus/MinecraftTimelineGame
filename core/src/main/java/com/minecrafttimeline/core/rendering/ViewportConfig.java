@@ -57,8 +57,8 @@ public class ViewportConfig {
         tempVec3.set(screenX, libgdxScreenY, 0f);
         viewport.unproject(tempVec3);
 
-        // Negate unprojected Y to correct viewport's inverted Y-axis
-        out.set(tempVec3.x, -tempVec3.y);
+        // The unprojected coordinates already use the bottom-left origin expected by the world.
+        out.set(tempVec3.x, tempVec3.y);
         return out;
     }
 
