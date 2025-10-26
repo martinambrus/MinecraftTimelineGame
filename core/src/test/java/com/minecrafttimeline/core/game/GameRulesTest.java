@@ -83,14 +83,15 @@ class GameRulesTest {
     }
 
     @Test
-    void isCorrectPlacement_respectsTolerance() {
+    void isCorrectPlacement_requiresExactMatch() {
         final List<Card> timeline = List.of(
                 card("1", LocalDate.of(1990, 1, 1)),
                 card("2", LocalDate.of(2000, 1, 1)),
                 card("3", LocalDate.of(2010, 1, 1)));
         final Card newCard = card("4", LocalDate.of(2005, 1, 1));
-        assertThat(GameRules.isCorrectPlacement(newCard, timeline, 1)).isTrue();
+        assertThat(GameRules.isCorrectPlacement(newCard, timeline, 2)).isTrue();
         assertThat(GameRules.isCorrectPlacement(newCard, timeline, 0)).isFalse();
+        assertThat(GameRules.isCorrectPlacement(newCard, timeline, 1)).isFalse();
     }
 
     @Test

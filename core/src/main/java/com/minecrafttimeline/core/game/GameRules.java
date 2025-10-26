@@ -97,13 +97,13 @@ public final class GameRules {
     }
 
     /**
-     * Determines whether the attempted placement is considered correct when
-     * accounting for the tolerance zone.
+     * Determines whether the attempted placement exactly matches the
+     * chronological position.
      *
      * @param card               card being evaluated; must not be {@code null}
      * @param timeline           current timeline; must not be {@code null}
      * @param positionInTimeline attempted insertion index
-     * @return {@code true} if the position is within ±1 of the ideal index, {@code false} otherwise
+     * @return {@code true} if the position matches the ideal index, {@code false} otherwise
      */
     public static boolean isCorrectPlacement(
             final Card card,
@@ -112,7 +112,7 @@ public final class GameRules {
         Objects.requireNonNull(card, "card must not be null");
         Objects.requireNonNull(timeline, "timeline must not be null");
         final int correctPosition = getCorrectPosition(card, timeline);
-        return Math.abs(correctPosition - positionInTimeline) <= 1;
+        return correctPosition == positionInTimeline;
     }
 
     /**
