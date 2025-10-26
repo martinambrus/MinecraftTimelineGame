@@ -132,8 +132,15 @@ public class GameplayScreen extends AbstractScreen {
                 timelineCards.size(), handCards.size(), cardWidth, cardHeight,
                 timelineAreaHeight + (handAreaHeight / 2f) - (cardHeight / 2f), spacing));
 
-        float xOffset = spacing;
         final float yTimeline = spacing;
+        final float timelineWidth;
+        if (timelineCards.isEmpty()) {
+            timelineWidth = cardWidth;
+        } else {
+            timelineWidth = (timelineCards.size() * cardWidth)
+                    + ((Math.max(0, timelineCards.size() - 1)) * spacing);
+        }
+        float xOffset = Math.max(spacing, (worldWidth - timelineWidth) / 2f);
         for (final com.minecrafttimeline.core.card.Card card : timelineCards) {
             final CardRenderer renderer = new CardRenderer(card, xOffset, yTimeline, cardWidth, cardHeight);
             timelineRenderers.add(renderer);
