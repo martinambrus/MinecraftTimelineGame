@@ -119,7 +119,7 @@ public class InputHandler implements InputProcessor {
             return false;
         }
         viewportConfig.screenToWorldCoordinates(screenX, screenY, worldTouch);
-        selectedCardPosition.set(worldTouch).add(dragOffset);
+        selectedCardPosition.set(worldTouch).sub(dragOffset);
         selectedCard.setPosition(selectedCardPosition.x, selectedCardPosition.y);
         if (debugLogging) {
             Gdx.app.log("InputHandler", String.format(
