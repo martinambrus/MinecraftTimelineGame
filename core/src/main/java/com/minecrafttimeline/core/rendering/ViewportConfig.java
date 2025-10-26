@@ -42,8 +42,14 @@ public class ViewportConfig {
      * @param height new pixel height
      */
     public void update(final int width, final int height) {
-        viewport.update(width, height, true);
-        screenHeight = height;
+        final int safeWidth = Math.max(1, width);
+        final int safeHeight = Math.max(1, height);
+        viewport.update(safeWidth, safeHeight, true);
+        if (height > 0) {
+            screenHeight = height;
+        } else if (screenHeight <= 0) {
+            screenHeight = (int) BASE_HEIGHT;
+        }
     }
 
     /**
@@ -61,7 +67,10 @@ public class ViewportConfig {
                     screenX, screenY, screenHeight));
         }
 
-        tempVec3.set(screenX, screenY, 0f);
+        final int effectiveHeight = screenHeight > 0 ? screenHeight : Math.max(1, viewport.getScreenHeight());
+        final float flippedY = effectiveHeight - screenY;
+
+        tempVec3.set(screenX, flippedY, 0f);
         viewport.unproject(tempVec3);
 
         if (debugLogging) {
@@ -99,7 +108,8 @@ public class ViewportConfig {
         viewport.project(tempVec3);
 
         // LibGDX returns screen Y=0 at bottom, flip to Y=0 at top (standard screen coords)
-        final float topLeftY = screenHeight - tempVec3.y;
+        final int effectiveHeight = screenHeight > 0 ? screenHeight : Math.max(1, viewport.getScreenHeight());
+        final float topLeftY = effectiveHeight - tempVec3.y;
         reusableScreen.set(tempVec3.x, topLeftY);
         return reusableScreen;
     }

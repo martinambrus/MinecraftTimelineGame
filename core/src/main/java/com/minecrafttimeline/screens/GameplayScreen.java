@@ -160,6 +160,7 @@ public class GameplayScreen extends AbstractScreen {
         }
 
         if (cardDragSystem != null) {
+            cardDragSystem.setPlacementZones(timelineSlots);
             cardDragSystem.updateValidZones(null);
         }
     }

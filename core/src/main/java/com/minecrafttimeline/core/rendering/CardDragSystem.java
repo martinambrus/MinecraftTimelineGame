@@ -10,7 +10,6 @@ import com.minecrafttimeline.core.game.GameSession;
 import com.minecrafttimeline.core.input.InputHandler;
 import com.minecrafttimeline.core.util.AssetLoader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +25,7 @@ public class CardDragSystem {
     private final AnimationManager animationManager;
     private final VisualFeedback visualFeedback;
     private final InputHandler inputHandler;
-    private final List<PlacementZone> placementZones;
+    private final List<PlacementZone> placementZones = new ArrayList<>();
     private final GameSession gameSession;
     private final List<PlacementZone> validZones = new ArrayList<>();
     private final List<PlacementZone> invalidZones = new ArrayList<>();
@@ -60,9 +59,28 @@ public class CardDragSystem {
         this.animationManager = Objects.requireNonNull(animationManager, "animationManager must not be null");
         this.visualFeedback = Objects.requireNonNull(visualFeedback, "visualFeedback must not be null");
         this.inputHandler = Objects.requireNonNull(inputHandler, "inputHandler must not be null");
-        placementZones = convertToPlacementZones(zones);
+        setPlacementZones(zones);
         outlineTexture = Objects.requireNonNull(loader, "loader must not be null").getTexture("images/white_pixel.png");
         this.gameSession = gameSession;
+    }
+
+    /**
+     * Replaces the tracked placement zones with the supplied list, recalculating highlight state.
+     *
+     * @param zones new placement zone descriptors (either {@link PlacementZone} or {@link CardRenderer})
+     */
+    public void setPlacementZones(final List<?> zones) {
+        placementZones.clear();
+        if (zones != null) {
+            final List<PlacementZone> converted = convertToPlacementZones(zones);
+            for (int i = 0; i < converted.size(); i++) {
+                final PlacementZone zone = converted.get(i);
+                if (zone != null) {
+                    placementZones.add(zone);
+                }
+            }
+        }
+        updateValidZones(null);
     }
 
     /**
@@ -176,8 +194,9 @@ public class CardDragSystem {
     }
 
     private List<PlacementZone> convertToPlacementZones(final List<?> zones) {
+        final List<PlacementZone> converted = new ArrayList<>();
         if (zones == null || zones.isEmpty()) {
-            return Collections.emptyList();
+            return converted;
         }
         boolean allPlacementZones = true;
         for (int i = 0; i < zones.size(); i++) {
@@ -190,9 +209,9 @@ public class CardDragSystem {
         if (allPlacementZones) {
             @SuppressWarnings("unchecked")
             final List<PlacementZone> placementZoneList = (List<PlacementZone>) zones;
-            return placementZoneList;
+            converted.addAll(placementZoneList);
+            return converted;
         }
-        final List<PlacementZone> converted = new ArrayList<>(zones.size());
         for (int i = 0; i < zones.size(); i++) {
             final Object element = zones.get(i);
             if (element instanceof PlacementZone) {
