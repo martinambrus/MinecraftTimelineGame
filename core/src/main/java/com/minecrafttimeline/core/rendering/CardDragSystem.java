@@ -26,7 +26,7 @@ public class CardDragSystem {
     private final AnimationManager animationManager;
     private final VisualFeedback visualFeedback;
     private final InputHandler inputHandler;
-    private final List<? extends PlacementZone> placementZones;
+    private final List<PlacementZone> placementZones;
     private final GameSession gameSession;
     private final List<PlacementZone> validZones = new ArrayList<>();
     private final List<PlacementZone> invalidZones = new ArrayList<>();
@@ -54,13 +54,13 @@ public class CardDragSystem {
             final AnimationManager animationManager,
             final VisualFeedback visualFeedback,
             final InputHandler inputHandler,
-            final List<? extends PlacementZone> zones,
+            final List<?> zones,
             final AssetLoader loader,
             final GameSession gameSession) {
         this.animationManager = Objects.requireNonNull(animationManager, "animationManager must not be null");
         this.visualFeedback = Objects.requireNonNull(visualFeedback, "visualFeedback must not be null");
         this.inputHandler = Objects.requireNonNull(inputHandler, "inputHandler must not be null");
-        placementZones = zones == null ? Collections.emptyList() : zones;
+        placementZones = convertToPlacementZones(zones);
         outlineTexture = Objects.requireNonNull(loader, "loader must not be null").getTexture("images/white_pixel.png");
         this.gameSession = gameSession;
     }
@@ -173,6 +173,37 @@ public class CardDragSystem {
             }
         }
         return null;
+    }
+
+    private List<PlacementZone> convertToPlacementZones(final List<?> zones) {
+        if (zones == null || zones.isEmpty()) {
+            return Collections.emptyList();
+        }
+        boolean allPlacementZones = true;
+        for (int i = 0; i < zones.size(); i++) {
+            final Object element = zones.get(i);
+            if (element != null && !(element instanceof PlacementZone)) {
+                allPlacementZones = false;
+                break;
+            }
+        }
+        if (allPlacementZones) {
+            @SuppressWarnings("unchecked")
+            final List<PlacementZone> placementZoneList = (List<PlacementZone>) zones;
+            return placementZoneList;
+        }
+        final List<PlacementZone> converted = new ArrayList<>(zones.size());
+        for (int i = 0; i < zones.size(); i++) {
+            final Object element = zones.get(i);
+            if (element instanceof PlacementZone) {
+                converted.add((PlacementZone) element);
+            } else if (element instanceof CardRenderer) {
+                converted.add(new RendererPlacementZone((CardRenderer) element));
+            } else {
+                converted.add(null);
+            }
+        }
+        return converted;
     }
 
     private void updateBindings() {
@@ -346,6 +377,35 @@ public class CardDragSystem {
             this.animation = animation;
             this.axis = axis;
             this.targetValue = targetValue;
+        }
+    }
+
+    private static final class RendererPlacementZone implements PlacementZone {
+
+        private final CardRenderer renderer;
+
+        RendererPlacementZone(final CardRenderer renderer) {
+            this.renderer = Objects.requireNonNull(renderer, "renderer must not be null");
+        }
+
+        @Override
+        public Rectangle getBounds() {
+            return renderer.getBounds();
+        }
+
+        @Override
+        public Vector2 getCenter() {
+            return renderer.getCenter();
+        }
+
+        @Override
+        public Vector2 getPosition() {
+            return renderer.getPosition();
+        }
+
+        @Override
+        public Vector2 getSize() {
+            return renderer.getSize();
         }
     }
 
