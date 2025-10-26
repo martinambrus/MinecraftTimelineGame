@@ -55,16 +55,13 @@ public class ViewportConfig {
      * @return {@code out} for chaining
      */
     public Vector2 screenToWorldCoordinates(final int screenX, final int screenY, final Vector2 out) {
-        // LibGDX expects screen Y=0 at bottom, but standard screen coords have Y=0 at top
-        final float libgdxScreenY = screenHeight - screenY;
-
         if (debugLogging) {
             Gdx.app.log("ViewportConfig", String.format(
-                    "screenToWorld: input=(%d,%d) screenHeight=%d flipped=(%.1f,%.1f)",
-                    screenX, screenY, screenHeight, (float)screenX, libgdxScreenY));
+                    "screenToWorld: input=(%d,%d) screenHeight=%d",
+                    screenX, screenY, screenHeight));
         }
 
-        tempVec3.set(screenX, libgdxScreenY, 0f);
+        tempVec3.set(screenX, screenY, 0f);
         viewport.unproject(tempVec3);
 
         if (debugLogging) {
