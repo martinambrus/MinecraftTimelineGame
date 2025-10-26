@@ -142,9 +142,9 @@ public final class TurnManager {
      *
      * @param card     card being placed; must not be {@code null}
      * @param position desired timeline index
-     * @return {@code true} if the placement was considered correct (within tolerance)
+     * @return outcome describing whether the placement was correct, incorrect or invalid
      */
-    public boolean applyCardPlacement(final Card card, final int position) {
+    public PlacementOutcome applyCardPlacement(final Card card, final int position) {
         Objects.requireNonNull(card, "card must not be null");
         if (gameState == null) {
             throw new IllegalStateException("Game state not attached");
@@ -156,26 +156,26 @@ public final class TurnManager {
         final List<Card> timelineSnapshot = gameState.getTimeline();
         if (!GameRules.validateCardPlacement(card, timelineSnapshot, position)) {
             setPhase(GamePhase.INCORRECT_PLACEMENT);
-            return false;
+            return PlacementOutcome.INVALID;
         }
         final boolean correct = GameRules.isCorrectPlacement(card, timelineSnapshot, position);
         final Player currentPlayer = getCurrentPlayer();
+        if (!correct) {
+            setPhase(GamePhase.INCORRECT_PLACEMENT);
+            return PlacementOutcome.INCORRECT;
+        }
         gameState.addCardToTimeline(card, position);
         currentPlayer.removeCardFromHand(card);
-        if (correct) {
-            currentPlayer.addToScore(2);
-        } else {
-            currentPlayer.addToScore(1);
-        }
+        currentPlayer.addToScore(2);
         gameState.setCurrentPlayerIndex(currentPlayerIndex);
-        final Move move = new Move(card, position, correct, currentPlayerIndex, System.currentTimeMillis());
-        setPhase(correct ? GamePhase.CORRECT_PLACEMENT : GamePhase.INCORRECT_PLACEMENT);
+        final Move move = new Move(card, position, true, currentPlayerIndex, System.currentTimeMillis());
+        setPhase(GamePhase.CORRECT_PLACEMENT);
         recordMove(move);
         if (GameRules.hasPlayerWon(currentPlayer.getHand(), gameState.getTimeline())) {
             setPhase(GamePhase.GAME_OVER);
             fireGameOver(currentPlayer);
         }
-        return correct;
+        return PlacementOutcome.CORRECT;
     }
 
     /**

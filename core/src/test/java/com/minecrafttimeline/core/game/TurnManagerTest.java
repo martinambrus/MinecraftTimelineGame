@@ -73,11 +73,25 @@ class TurnManagerTest {
         populateTimeline(1990, 2000);
         final Card card = card("play", 1995);
         players.get(0).addCardToHand(card);
-        final boolean correct = turnManager.applyCardPlacement(card, 1);
-        assertThat(correct).isTrue();
+        final PlacementOutcome outcome = turnManager.applyCardPlacement(card, 1);
+        assertThat(outcome).isEqualTo(PlacementOutcome.CORRECT);
         assertThat(gameState.getTimeline()).contains(card);
         assertThat(players.get(0).getScore()).isEqualTo(2);
         assertThat(gameState.getMoveHistory()).hasSize(1);
+    }
+
+    @Test
+    void applyCardPlacement_returnsIncorrectWhenSlotIsNotExact() {
+        populateTimeline(1990, 1995);
+        final Card card = card("duplicate", 1995);
+        players.get(0).addCardToHand(card);
+
+        final PlacementOutcome outcome = turnManager.applyCardPlacement(card, 2);
+
+        assertThat(outcome).isEqualTo(PlacementOutcome.INCORRECT);
+        assertThat(gameState.getTimeline()).hasSize(2).doesNotContain(card);
+        assertThat(players.get(0).getHand()).contains(card);
+        assertThat(players.get(0).getScore()).isZero();
     }
 
     @Test

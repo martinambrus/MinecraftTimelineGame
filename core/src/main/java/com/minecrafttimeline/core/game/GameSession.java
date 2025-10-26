@@ -46,21 +46,14 @@ public final class GameSession {
      *
      * @param card     card to place; must not be {@code null}
      * @param position desired timeline position
-     * @return {@code true} when the placement is judged correct (within tolerance)
+     * @return {@code true} when the placement is judged correct
      */
     public boolean placeCard(final Card card, final int position) {
         Objects.requireNonNull(card, "card must not be null");
         ensureInitialised();
         final Player currentPlayer = gameState.getCurrentPlayer();
-        final int beforeSize = gameState.getTimeline().size();
-        final boolean result = turnManager.applyCardPlacement(card, position);
-        final int afterSize = gameState.getTimeline().size();
-        final boolean cardPlaced = afterSize > beforeSize;
-        if (cardPlaced) {
-            if (!result) {
-                // Card was placed but position was incorrect (within tolerance but not perfect)
-                handleIncorrectPlacement(currentPlayer, card);
-            }
+        final PlacementOutcome outcome = turnManager.applyCardPlacement(card, position);
+        if (outcome == PlacementOutcome.CORRECT) {
             if (gameState.isGameOver()) {
                 final int playerCount = gameState.getPlayers().size();
                 if (playerCount > 0) {
@@ -70,7 +63,14 @@ public final class GameSession {
             } else {
                 turnManager.nextTurn();
             }
-            return result;
+            return true;
+        }
+        if (outcome == PlacementOutcome.INCORRECT) {
+            handleIncorrectPlacement(currentPlayer, card);
+            if (!gameState.isGameOver()) {
+                turnManager.setPhase(GamePhase.PLAYER_TURN);
+            }
+            return false;
         }
         // Validation failed - card not placed, stays in hand
         if (!gameState.isGameOver()) {
@@ -218,7 +218,21 @@ public final class GameSession {
     }
 
     private void handleIncorrectPlacement(final Player currentPlayer, final Card card) {
+        boolean discarded = false;
         if (currentPlayer.removeCardFromHand(card)) {
+            gameState.addCardToDiscardPile(card);
+            discarded = true;
+        }
+        final List<Card> timeline = gameState.getTimeline();
+        final int index = timeline.indexOf(card);
+        if (index >= 0) {
+            final Card removed = gameState.removeCardFromTimeline(index);
+            if (!discarded) {
+                gameState.addCardToDiscardPile(removed);
+                discarded = true;
+            }
+        }
+        if (!discarded) {
             gameState.addCardToDiscardPile(card);
         }
         drawReplacementCard(currentPlayer);

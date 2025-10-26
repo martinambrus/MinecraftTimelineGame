@@ -60,6 +60,25 @@ class GameSessionTest {
     }
 
     @Test
+    void placeCard_incorrectPlacementDiscardsCardAndDrawsReplacement() {
+        final Player currentPlayer = players.get(0);
+        final Card duplicateDateCard = card("dup", 2010);
+        currentPlayer.addCardToHand(duplicateDateCard);
+        final int initialHandSize = currentPlayer.getHand().size();
+        final int initialDeckSize = deck.size();
+
+        final boolean result = session.placeCard(duplicateDateCard, 1);
+
+        assertThat(result).isFalse();
+        assertThat(session.getGameState().getTimeline()).hasSize(1);
+        assertThat(currentPlayer.getHand()).hasSize(initialHandSize)
+                .doesNotContain(duplicateDateCard);
+        assertThat(session.getGameState().getDiscardPile()).containsExactly(duplicateDateCard);
+        assertThat(deck.size()).isEqualTo(Math.max(0, initialDeckSize - 1));
+        assertThat(session.getTurnManager().getCurrentPlayer()).isEqualTo(currentPlayer);
+    }
+
+    @Test
     void undoAndRedo_restoreStateCorrectly() {
         final Card card = players.get(0).getHand().get(0);
         session.placeCard(card, 0);
