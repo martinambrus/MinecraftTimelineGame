@@ -22,7 +22,7 @@ public class ViewportConfig {
     private final Vector3 tempVec3 = new Vector3();
     private final Vector2 reusableWorld = new Vector2();
     private final Vector2 reusableScreen = new Vector2();
-    private int screenHeight = (int) BASE_HEIGHT;
+    private int windowHeight = (int) BASE_HEIGHT;
     private boolean debugLogging = false;
 
     /**
@@ -42,14 +42,16 @@ public class ViewportConfig {
      * @param height new pixel height
      */
     public void update(final int width, final int height) {
-        final int safeWidth = Math.max(1, width);
-        final int safeHeight = Math.max(1, height);
-        viewport.update(safeWidth, safeHeight, true);
-        if (height > 0) {
-            screenHeight = height;
-        } else if (screenHeight <= 0) {
-            screenHeight = (int) BASE_HEIGHT;
+        // Guard against transient zero-sized resize events reported by headless environments.
+        if (width <= 0 || height <= 0) {
+            if (windowHeight <= 0) {
+                windowHeight = computeWindowHeight();
+            }
+            return;
         }
+
+        viewport.update(width, height, true);
+        windowHeight = height;
     }
 
     /**
@@ -63,12 +65,11 @@ public class ViewportConfig {
     public Vector2 screenToWorldCoordinates(final int screenX, final int screenY, final Vector2 out) {
         if (debugLogging) {
             Gdx.app.log("ViewportConfig", String.format(
-                    "screenToWorld: input=(%d,%d) screenHeight=%d",
-                    screenX, screenY, screenHeight));
+                    "screenToWorld: input=(%d,%d) windowHeight=%d",
+                    screenX, screenY, getEffectiveWindowHeight()));
         }
 
-        final int effectiveHeight = screenHeight > 0 ? screenHeight : Math.max(1, viewport.getScreenHeight());
-        final float flippedY = effectiveHeight - screenY;
+        final float flippedY = getEffectiveWindowHeight() - screenY;
 
         tempVec3.set(screenX, flippedY, 0f);
         viewport.unproject(tempVec3);
@@ -108,10 +109,27 @@ public class ViewportConfig {
         viewport.project(tempVec3);
 
         // LibGDX returns screen Y=0 at bottom, flip to Y=0 at top (standard screen coords)
-        final int effectiveHeight = screenHeight > 0 ? screenHeight : Math.max(1, viewport.getScreenHeight());
-        final float topLeftY = effectiveHeight - tempVec3.y;
+        final float topLeftY = getEffectiveWindowHeight() - tempVec3.y;
         reusableScreen.set(tempVec3.x, topLeftY);
         return reusableScreen;
+    }
+
+    private int getEffectiveWindowHeight() {
+        if (windowHeight > 0) {
+            return windowHeight;
+        }
+        windowHeight = computeWindowHeight();
+        return windowHeight;
+    }
+
+    private int computeWindowHeight() {
+        final int screenHeight = viewport.getScreenHeight();
+        final int screenY = viewport.getScreenY();
+        final int computed = screenHeight + 2 * screenY;
+        if (computed <= 0) {
+            return (int) BASE_HEIGHT;
+        }
+        return computed;
     }
 
     /**
